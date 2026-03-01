@@ -1,0 +1,29 @@
+POST http://localhost:5000/login
+Content-Type: application/json
+
+{
+    "username" : "shima",
+    "password" : "meow"
+}
+
+###
+
+POST http://localhost:5000/logout
+authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InNoaW1hIiwiaWF0IjoxNzcyMTg5NDUxfQ.GeB5iJMltBOTlPsOZ1T-uJfLGLaMb5dKFIAzb6uyK6Q
+
+
+###
+
+POST http://localhost:5000/get-access-token
+authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InNoaW1hIiwiaWF0IjoxNzcyMjcyODQ3fQ.x93LWBdgc7Mxrv45iWkX04WgoynwWZcnk6SOpCFrpfA
+
+POST http://localhost:5000/signup
+Content-Type: application/json
+
+{"username" : "shima",
+"password": "meow"}
+
+###
+
+GET http://localhost:5000/test
+authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InNoaW1hIiwiaWF0IjoxNzcyMjcyODg2LCJleHAiOjE3NzIyNzI5NDZ9.TPblIKNS8lsYwwh5J01EEIWIDKOD1HYhzM0RR2TWudQ
