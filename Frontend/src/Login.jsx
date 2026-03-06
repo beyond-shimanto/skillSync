@@ -1,17 +1,14 @@
-import { accessTokenContext } from "./AuthContext"
+import { Link } from "react-router-dom"
+import { authContext } from "./AuthContext"
 import { useContext, useState } from "react"
-
-
-
-
-
+import './Login.css'
 
 
 
 export function Login(){
 
 
-    const {handleLogin, handleLogout, isLoggedIn} = useContext(accessTokenContext)
+    const {handleLogin, handleLogout, isLoggedIn} = useContext(authContext)
     const [usernameInput, setUsernameInput] = useState('')
     const [passwordInput, setPasswordInput] = useState('')
     const [error, setError] = useState('')
@@ -38,7 +35,7 @@ export function Login(){
         }
         else{
             setError('')
-            setMessage('Sucessfully logged in!')
+            
         }
         
         
@@ -59,22 +56,27 @@ export function Login(){
 
     return (
     <>
-    {error && <p>{error}</p>}
-    {message && <p>{message}</p>}
-    {isLoggedIn? 
+    <div className="content-container">
+        {error && <p>{error}</p>}
+        {message && <p>{message}</p>}
+        {isLoggedIn? 
     <>
         <p>You're already logged in!</p>
+        <Link to={'/'}>Home</Link>
         <button onClick={handleLogoutSubmit}>Logout</button>    
     </> 
     : 
     <>
+        <p>Please login</p>
         <p>Username: </p>
         <input onChange={handleUsernameInput}></input>
         <p>Password: </p>
         <input onChange={handlePassworldInput}></input>
-    
+        <br></br>
         <button onClick={handleLoginSubmit}>Login</button>
     </>}
+    </div>
+    
         
         
 

@@ -13,7 +13,7 @@ createRoot(document.getElementById('root')).render(
         <BrowserRouter>
           <App />
         </BrowserRouter>
-        </ApiProvider>
+      </ApiProvider>
     </AuthProvider>
   </StrictMode>,
 )

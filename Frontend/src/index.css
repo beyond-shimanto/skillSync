@@ -11,23 +11,28 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  --accent-color: #04afed;
+}
+
+*{
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
 }
 
 a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
+  box-shadow: inset 0 0 0 0 hsl(from var(--accent-color) h calc(s*0.75) l / 1);
+  color: hsl(from var(--accent-color) h calc(s*0.75) calc(l*1.25) / 1);
+	padding: 0.25rem .25rem;
+	margin: 0 0;
+  transition: color .3s ease-in-out, box-shadow .3s ease-in-out;
+  text-decoration: none;
+
 }
 a:hover {
-  color: #535bf2;
-}
-
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+  color: #fff;
+  box-shadow: inset 200px 0 0 0 hsl(from var(--accent-color) h calc(s*0.75) calc(l*1.25) / 0.25);
 }
 
 h1 {
@@ -35,34 +40,161 @@ h1 {
   line-height: 1.1;
 }
 
+
 button {
+  appearance: none;
+  backface-visibility: hidden;
+  background-color: var(--accent-color);
   border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
+  border-style: none;
+  box-shadow: rgba(39, 174, 96, .15) 0 4px 9px;
+  box-sizing: border-box;
+  color: #fff;
   cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  display: inline-block;
+  font-family: Inter,-apple-system,system-ui,"Segoe UI",Helvetica,Arial,sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: normal;
+  line-height: 1.5;
+  outline: none;
+  overflow: hidden;
+  padding: 13px 20px;
+  position: relative;
+  text-align: center;
+  text-decoration: none;
+  transform: translate3d(0, 0, 0);
+  transition: all .3s;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  vertical-align: top;
+  white-space: nowrap;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+button:hover {
+  background: hsl(from var(--accent-color) h calc(s*2) l / 1);
+  opacity: 1;
+  transform: translateY(0);
+  transition-duration: .35s;
+}
+
+button:active {
+  transform: translateY(2px);
+  transition-duration: .35s;
+}
+
+button:hover {
+  box-shadow: rgba(39, 174, 96, .2) 0 6px 12px;
+}
+
+.card{
+
+                position: relative;
+
+                box-shadow: 0 0 0.5rem 0.1rem rgb(0 0 0 / 0.25);
+                padding: 0.5rem;
+                min-height: 8rem;
+
+                h4{
+                    font-size: 1.5rem;
+                    position: relative;
+                    width: 100%;
+
+                    cursor: pointer;
+                }
+                
+                h4::after{
+                    content: '';
+                    position: absolute;
+                    bottom: 0;
+                    left: 0;
+                    width: 95%;
+                    height: 0.125rem;
+                    background-color: var(--accent-color);
+
+                    border-radius: 2rem;
+
+                }
+
+                .view-button{
+                    position: absolute;
+                    right: 0;
+                    top: 0;
+
+                    width: 5%;
+                    height: 100%;
+                    background-color: var(--accent-color);
+
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+
+                    transition: 250ms ease;
+
+                    cursor: pointer;
+
+                    svg{
+                        transition: 250ms ease;
+                        path{
+                            stroke: white;
+                            transition: 250ms ease;
+                        }
+                    }
+                }
+
+                .view-button:hover{
+                    background-color: hsl(from var(--accent-color) h calc(s*1.5) calc(l*1.5));
+
+                    svg{
+                        path{
+                            stroke: black;  
+                        }
+                    }
+                }
+
+            }
+
+
+.tag-pills-container{
+
+    padding: 0.2rem;
+
+    display: flex;
+    align-items: center;
+    justify-content: start;
+    gap: 1rem;
+    .tag-pill{
+        
+        padding: 0.25rem 0.2rem;
+        background-color: var(--accent-color);
+        width: fit-content;
+        min-width: 4rem;
+        text-align: center;
+        
+
+        box-shadow: 0 0 0.2rem 0.2rem rgba(from black r g b / 0.2);
+
+        border-radius: 0.2rem;
+
+        transition: 250ms ease;
+    }
+
+    .tag-pill-deletable{
+      cursor: pointer;
+    }
+
+    .tag-pill-deletable:hover{
+      background-color: red;
+    }
+
+}
+
+input{
+    all: unset;
+    border-bottom: 2px solid grey;
+    transition: 250ms ease;
+}
+input:focus{
+    border-bottom: 2px solid white;
 }

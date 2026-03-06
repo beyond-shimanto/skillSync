@@ -1,0 +1,108 @@
+.group-view{
+
+    width: 100%;
+    padding: 2rem;
+
+    .top-bar{
+        width: 100%;
+        display: flex;
+        
+        padding: 1rem;
+        align-self: center;
+        justify-content: space-between;
+
+        h2{
+            transition: 500ms ease;
+            cursor: pointer;
+        }
+        h2:hover{
+            color: var(--accent-color);
+        }
+
+    }
+
+    .content-container{
+        max-width: 1000px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: start;
+
+        margin: 0 auto;
+
+        .tab-selectors-container{
+            width: 100%;
+            min-height: 3rem;
+
+            display: flex;
+            align-items: stretch;
+            justify-content: center;
+
+            .tab-selector{
+                flex: 1;
+                background-color: var(--accent-color);
+
+                color: black;
+                font-size: 1.125rem;
+
+                display: flex;
+                align-items: center;
+                justify-content: center;
+
+                cursor: pointer;
+
+            }
+            .tab-selector.selected{
+                background-color: hsl(from var(--accent-color) h s calc(l*0.75) / 1);
+                color: white;
+            }
+
+        }
+
+        .threads-container{
+            width: 100%;
+
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: start;
+            
+            gap: 1rem;
+
+
+            .card{
+                width: min(100%, 900px)
+            }
+        }
+
+        .resources-container{
+            width: 100%;
+
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: start;
+            
+            gap: 1rem;
+
+
+            .card{
+                width: min(100%, 900px)
+            }
+        }
+
+        .invite-container{
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+
+            a{
+                cursor: pointer;
+            }
+        }
+    }
+
+}
+

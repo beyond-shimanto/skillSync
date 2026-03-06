@@ -1,0 +1,54 @@
+.chat-view{
+    position: relative;
+
+    width: 100%;
+    height: 100dvh;
+
+    .texts-container{
+        height: 85dvh;
+        width: 100%;
+
+        display: flex;
+        flex-direction: column;
+        align-items: start;
+        justify-content: end;
+
+        gap: 0.5rem;
+
+        .text{
+            padding: 0.5rem 2rem;
+            width: 75%;
+            margin-left: 0.5rem;
+            margin-right: 0.5rem;
+            background-color: hsl(from var(--accent-color) h s calc(l*0.85) / 0.8);
+            border-radius: 1.25rem;
+        }
+
+        .text.own{
+            align-self: end;
+            background-color: grey ;
+        }
+
+
+    }
+
+    .text-reply-input-container{
+        height: 15dvh;
+        position: absolute;
+
+        bottom: 0;
+        left: 0;
+
+        padding: 1rem;
+        width: 100%;
+
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+
+        gap: 1rem;
+        input{
+            flex: 1;
+        }
+    }
+}
