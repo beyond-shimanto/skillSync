@@ -1,0 +1,49 @@
+.upload-portfolio {
+    padding: 2rem;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.upload-portfolio form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.upload-portfolio label {
+    font-weight: bold;
+}
+
+.upload-portfolio input,
+.upload-portfolio textarea {
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.upload-portfolio textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.upload-portfolio button {
+    padding: 0.75rem;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.upload-portfolio button:hover {
+    background: #0056b3;
+}
+
+.upload-portfolio button:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+.error {
+    color: red;
+}

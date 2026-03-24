@@ -39,9 +39,27 @@
 
             
 
+        .additional-links {
+            margin-top: 2rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .additional-links a {
+            padding: 0.5rem 1rem;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+
+        .additional-links a:hover {
+            background: #0056b3;
         }
         
     }
     
 }
 
+}

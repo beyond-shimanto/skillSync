@@ -10,6 +10,7 @@ import { Server } from 'socket.io';
 import {createServer} from 'http';
 
 import { studyGroupRouter } from './studyGroupRouter.js';
+import { portfolioRouter } from './portfolio/portfolioRouter.js';
 
 const app = express()
 
@@ -28,6 +29,7 @@ app.use(cors({exposedHeaders: ['Content-Disposition']}))
 app.use(express.json())
 
 app.use('/study-groups', studyGroupRouter)
+app.use('/portfolios', portfolioRouter)
 
 const port = 5000;
 server.listen(port)

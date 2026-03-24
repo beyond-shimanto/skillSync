@@ -14,6 +14,10 @@ import {GroupView} from './StudyGroupComponents/GroupView'
 import { ThreadView } from './StudyGroupComponents/ThreadView'
 import { ChatView } from './StudyGroupComponents/ChatView'
 
+import { PortfolioList } from './PortfolioComponents/PortfolioList'
+import { UploadPortfolio } from './PortfolioComponents/UploadPortfolio'
+import { MyPortfolios } from './PortfolioComponents/MyPortfolios'
+
 function App() {
   
 
@@ -28,7 +32,9 @@ function App() {
         <Route path="/study-groups/view-group/:groupId" element={<ProtectedRoute><GroupView></GroupView></ProtectedRoute>}></Route>
         <Route path='/study-groups/view-thread/:groupId/:threadId' element={<ProtectedRoute><ThreadView></ThreadView></ProtectedRoute>}></Route>
         <Route path='/study-groups/view-chat/:groupId' element={<ProtectedRoute><ChatView></ChatView></ProtectedRoute>}></Route>
-
+        <Route path="/portfolios" element={<ProtectedRoute><PortfolioList /></ProtectedRoute>} />
+        <Route path="/portfolios/upload" element={<ProtectedRoute><UploadPortfolio /></ProtectedRoute>} />
+        <Route path="/portfolios/my" element={<ProtectedRoute><MyPortfolios /></ProtectedRoute>} />
       </Routes>
     </>
   )

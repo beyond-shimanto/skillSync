@@ -16,7 +16,7 @@ export function Home(){
         async function getOwnGroups(){
             try{
                 const res = await api.get('/study-groups/get-joined-study-groups')
-                setOwnGroups([res.data[0], res.data[1], res.data[2]])
+                setOwnGroups(res.data.slice(0, 3))
                 
             }
             catch(e){
@@ -98,7 +98,11 @@ export function Home(){
                 :
                 <h3>You are not a member of any groups</h3>
                 }
-                <Link to='/study-groups'>Browse more groups</Link>
+                <div className="additional-links">
+                    <Link to='/study-groups'>Browse Study Groups</Link>
+                    <Link to='/portfolios'>View Portfolios</Link>
+                    <Link to='/portfolios/my'>My Portfolios</Link>
+                </div>
              </div>
         </div>
            
