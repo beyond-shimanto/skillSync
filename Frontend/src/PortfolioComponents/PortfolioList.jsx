@@ -36,7 +36,7 @@ export function PortfolioList() {
                             <p>{portfolio.description}</p>
                             <p>By: {portfolio.userId.username}</p>
                             <p>Uploaded: {new Date(portfolio.createdAt).toLocaleDateString()}</p>
-                            <a href={portfolio.url} target="_blank" rel="noopener noreferrer">View Portfolio</a>
+                            <a href={'https://' + String(portfolio.url)} target="_blank" rel="noopener noreferrer">View Portfolio</a>
                         </div>
                     ))}
                 </div>

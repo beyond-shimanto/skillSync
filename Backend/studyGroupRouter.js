@@ -500,7 +500,5 @@ studyGroupRouter.get('/:studyGroupId/download-resource/:resourceId', authenticat
         console.log(e)
         res.status(500).json({error: "Server error"})
     }
-
-
-    
+        
 })
