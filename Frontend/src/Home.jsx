@@ -102,6 +102,7 @@ export function Home(){
                     <Link to='/study-groups'>Browse Study Groups</Link>
                     <Link to='/portfolios'>View Portfolios</Link>
                     <Link to='/portfolios/my'>My Portfolios</Link>
+                    <Link to='/ai/chat'>AI Chat Assistant</Link>
                 </div>
              </div>
         </div>

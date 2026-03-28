@@ -11,6 +11,7 @@ import {createServer} from 'http';
 
 import { studyGroupRouter } from './studyGroupRouter.js';
 import { portfolioRouter } from './portfolio/portfolioRouter.js';
+import { aiRouter } from './ai/aiRouter.js';
 
 const app = express()
 
@@ -30,6 +31,7 @@ app.use(express.json())
 
 app.use('/study-groups', studyGroupRouter)
 app.use('/portfolios', portfolioRouter)
+app.use('/ai', aiRouter)
 
 const port = 5000;
 server.listen(port)
