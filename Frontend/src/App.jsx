@@ -17,7 +17,9 @@ import { ChatView } from './StudyGroupComponents/ChatView'
 import { PortfolioList } from './PortfolioComponents/PortfolioList'
 import { UploadPortfolio } from './PortfolioComponents/UploadPortfolio'
 import { MyPortfolios } from './PortfolioComponents/MyPortfolios'
-import { AIChatbot } from './aicomponent/AIChatbot'
+
+import  JobTracker from "./JobTracker";
+
 
 function App() {
   
@@ -36,7 +38,7 @@ function App() {
         <Route path="/portfolios" element={<ProtectedRoute><PortfolioList /></ProtectedRoute>} />
         <Route path="/portfolios/upload" element={<ProtectedRoute><UploadPortfolio /></ProtectedRoute>} />
         <Route path="/portfolios/my" element={<ProtectedRoute><MyPortfolios /></ProtectedRoute>} />
-        <Route path="/ai/chat" element={<ProtectedRoute><AIChatbot /></ProtectedRoute>} />
+        <Route path="/jobs" element={<ProtectedRoute><JobTracker /></ProtectedRoute>} />
       </Routes>
     </>
   )
