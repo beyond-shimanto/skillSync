@@ -18,6 +18,8 @@ import { PortfolioList } from './PortfolioComponents/PortfolioList'
 import { UploadPortfolio } from './PortfolioComponents/UploadPortfolio'
 import { MyPortfolios } from './PortfolioComponents/MyPortfolios'
 
+import {AIChatbot} from './aicomponent/AIChatbot'
+
 import  JobTracker from "./JobTracker";
 
 
@@ -39,6 +41,7 @@ function App() {
         <Route path="/portfolios/upload" element={<ProtectedRoute><UploadPortfolio /></ProtectedRoute>} />
         <Route path="/portfolios/my" element={<ProtectedRoute><MyPortfolios /></ProtectedRoute>} />
         <Route path="/jobs" element={<ProtectedRoute><JobTracker /></ProtectedRoute>} />
+        <Route path="/chatbot" element={<ProtectedRoute><AIChatbot></AIChatbot></ProtectedRoute>} />
       </Routes>
     </>
   )

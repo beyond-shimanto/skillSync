@@ -103,6 +103,7 @@ export function Home(){
                     <Link to='/portfolios'>View Portfolios</Link>
                     <Link to='/portfolios/my'>My Portfolios</Link>
                     <Link to='/jobs'>Job Tracker</Link>
+                    <Link to='/chatbot'>AI Chatbot</Link>
                 </div>
              </div>
         </div>
