@@ -19,6 +19,9 @@ import { UploadPortfolio } from './PortfolioComponents/UploadPortfolio'
 import { MyPortfolios } from './PortfolioComponents/MyPortfolios'
 
 import {AIChatbot} from './aicomponent/AIChatbot'
+import { MentorDirectory } from './MentorComponents/MentorDirectory'
+import { MentorProfileView } from './MentorComponents/MentorProfileView'
+import { MentorProfileEditor } from './MentorComponents/MentorProfileEditor'
 
 import  JobTracker from "./JobTracker";
 
@@ -42,6 +45,9 @@ function App() {
         <Route path="/portfolios/my" element={<ProtectedRoute><MyPortfolios /></ProtectedRoute>} />
         <Route path="/jobs" element={<ProtectedRoute><JobTracker /></ProtectedRoute>} />
         <Route path="/chatbot" element={<ProtectedRoute><AIChatbot></AIChatbot></ProtectedRoute>} />
+        <Route path="/mentors" element={<ProtectedRoute><MentorDirectory /></ProtectedRoute>} />
+        <Route path="/mentors/:mentorUserId" element={<ProtectedRoute><MentorProfileView /></ProtectedRoute>} />
+        <Route path="/mentors/profile/edit" element={<ProtectedRoute><MentorProfileEditor /></ProtectedRoute>} />
       </Routes>
     </>
   )

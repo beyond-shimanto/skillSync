@@ -214,3 +214,41 @@ const studyGroupResourceSchema = new mongoose.Schema({
 })
 
 export const studyGroupResourceModel = mongoose.model('StudyGroupResource', studyGroupResourceSchema)
+
+const mentorProfileSchema = new mongoose.Schema({
+    mentorUserId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true,
+        unique: true
+    },
+    bio: {
+        type: String,
+        default: ''
+    },
+    expertiseTags: {
+        type: [{ type: String, trim: true, lowercase: true }],
+        default: []
+    },
+    yearsOfExperience: {
+        type: Number,
+        default: 0
+    },
+    hourlyRate: {
+        type: Number,
+        default: 0
+    },
+    averageRating: {
+        type: Number,
+        default: 0
+    },
+    reviewCount: {
+        type: Number,
+        default: 0
+    }
+}, { timestamps: true })
+
+mentorProfileSchema.index({ expertiseTags: 1 })
+mentorProfileSchema.index({ hourlyRate: 1 })
+
+export const mentorProfileModel = mongoose.model('MentorProfile', mentorProfileSchema)

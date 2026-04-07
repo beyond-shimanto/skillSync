@@ -3,6 +3,7 @@ import { Link,useNavigate } from "react-router-dom"
 import { authContext } from "./AuthContext"
 import { apiContext } from "./ApiContext"
 import './Home.css'
+import { MentorDashboard } from "./MentorComponents/MentorDashboard"
 
 
 export function Home(){
@@ -11,6 +12,7 @@ export function Home(){
     const {api} = useContext(apiContext )
     const navigate = useNavigate()
     const [ownGroups, setOwnGroups] = useState([])
+    const [userType, setUserType] = useState('')
 
     useEffect(() => {
         async function getOwnGroups(){
@@ -24,7 +26,18 @@ export function Home(){
             }
         }
 
+        async function getProfileInfo(){
+            try{
+                const res = await api.get('/get-profile-info')
+                setUserType(res.data.userType ?? '')
+            }
+            catch(e){
+                setUserType('')
+            }
+        }
+
         getOwnGroups()
+        getProfileInfo()
     }, [])
 
 
@@ -52,6 +65,10 @@ export function Home(){
             </>
         )
 
+    }
+
+    if(userType === 'mentor'){
+        return <MentorDashboard username={username} onLogout={handleLogout} />
     }
 
     return (
@@ -104,6 +121,8 @@ export function Home(){
                     <Link to='/portfolios/my'>My Portfolios</Link>
                     <Link to='/jobs'>Job Tracker</Link>
                     <Link to='/chatbot'>AI Chatbot</Link>
+                    <Link to='/mentors'>Mentor Directory</Link>
+                    {userType === 'mentor' && <Link to='/mentors/profile/edit'>Edit Mentor Profile</Link>}
                 </div>
              </div>
         </div>

@@ -51,7 +51,7 @@ export function SignUp(){
     }
 
     async function handleSubmit(){
-        const signupSuccess = await handleSignup(usernameInput, passwordInput, tags)
+        const signupSuccess = await handleSignup(usernameInput, passwordInput, tags, type)
         if (signupSuccess){
             setMessage('Successfully signed up! Now login')
         }

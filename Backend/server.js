@@ -5,12 +5,13 @@ import jwt from 'jsonwebtoken';
 import 'dotenv/config';
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs'
-import {userModel, refreshTokenModel, userAuthModel} from './models.js'
+import { userModel, refreshTokenModel, userAuthModel, mentorProfileModel } from './models.js';
 import { Server } from 'socket.io';
 import {createServer} from 'http';
 
 import { studyGroupRouter } from './studyGroupRouter.js';
 import { portfolioRouter } from './portfolio/portfolioRouter.js';
+import { mentorRouter } from './routes/mentor/mentorRoutes.js';
 
 const app = express()
 
@@ -34,6 +35,7 @@ app.use(express.json())
 app.use('/study-groups', studyGroupRouter)
 app.use('/portfolios', portfolioRouter)
 app.use("/api/jobs", jobRoutes);
+app.use('/mentors', mentorRouter)
 
 const port = 5000;
 server.listen(port)
@@ -131,6 +133,8 @@ app.post('/signup', async (req, res) => {
     const username = req.body.username ?? undefined
     const password = req.body.password ?? undefined
     const tags = req.body.tags ?? []
+    const type = req.body.type === 'mentor' ? 'mentor' : 'student'
+
     if(!username){
         res.status(400).json({error: "No username provided"})
         return
@@ -148,6 +152,7 @@ app.post('/signup', async (req, res) => {
     }
     catch(err){
         res.status(500).json({error: "server error"})
+        return
     }
     
     const hashedPassword = await bcrypt.hash(req.body.password, 10)
@@ -157,22 +162,35 @@ app.post('/signup', async (req, res) => {
         password: hashedPassword
     })
 
+    // Step 1: Create the user first
     const newUser = new userModel({
         username: username,
-        userType: 'student',
+        userType: type,
         tags: tags
     })
+    await newUser.save();  // save first to get _id
+
+    // Step 2: Only if mentor, create mentor profile after user is saved
+    if (type === 'mentor') {
+        const newProfile = new mentorProfileModel({
+            mentorUserId: newUser._id,
+            bio: "",
+            expertiseTags: [],
+            yearsOfExperience: 0,
+            hourlyRate: 0,
+            averageRating: 0,
+            reviewCount: 0
+        });
+        await newProfile.save();
+    }
 
     try{
         await newUserAuth.save()
-        await newUser.save()
         res.status(200).json({message: "Successfully signed up!"})
     }
     catch(err){
         res.status(500).json({error: "server error"})
     }
-    
-
 })
 
 async function saveRefreshToken(refreshToken){
