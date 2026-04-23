@@ -33,8 +33,19 @@ const userSchema = new mongoose.Schema({
     tags: {
         type:  [{type: String, trim: true, lowercase: true}],
         default: []
+    },
+    bio: {
+        type: String,
+        default: ''
+    },
+    profilePicture: {
+        type: String,
+        default: ''
+    },
+    achievements: {
+        type: [{ type: String, trim: true }],
+        default: []
     }
-
 
 })
 
