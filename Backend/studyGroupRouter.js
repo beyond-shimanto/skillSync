@@ -1,6 +1,6 @@
 import express from 'express'
 import { authenticate } from './server.js'
-import { userModel, studyGroupModel, studyGroupMembershipModel, studyGroupInvitationModel, studyGroupThreadModel, studyGroupThreadReplyModel, studyGroupChatTextModel, studyGroupResourceModel } from './models.js'
+import { userModel, studyGroupModel, studyGroupMembershipModel, studyGroupInvitationModel, studyGroupThreadModel, studyGroupThreadReplyModel, studyGroupChatTextModel, studyGroupResourceModel, studySessionModel } from './models.js'
 import {io} from './server.js'
 
 import multer from 'multer'
@@ -501,4 +501,88 @@ studyGroupRouter.get('/:studyGroupId/download-resource/:resourceId', authenticat
         res.status(500).json({error: "Server error"})
     }
         
+})
+
+// Create a session
+studyGroupRouter.post('/:studyGroupId/create-session', authenticate, async (req, res) => {
+    try {
+        const studyGroupId = req.params.studyGroupId
+        const userId = req.userObject.userId
+        const { title, description, scheduledAt } = req.body
+
+        if (!await isUserMemberOfStudyGroup(userId, studyGroupId)) {
+            res.status(400).json({ error: "User is not a member of this group" })
+            return
+        }
+
+        const newSession = new studySessionModel({
+            parentStudyGroupId: studyGroupId,
+            title,
+            description,
+            scheduledAt,
+            createdBy: userId
+        })
+
+        await newSession.save()
+        res.status(200).json({ message: "Successfully created session" })
+
+    } catch (e) {
+        console.log(e)
+        res.status(500).json({ error: "Server error" })
+    }
+})
+
+// Get all sessions for a group
+studyGroupRouter.get('/:studyGroupId/get-sessions', authenticate, async (req, res) => {
+    try {
+        const studyGroupId = req.params.studyGroupId
+        const userId = req.userObject.userId
+
+        if (!await isUserMemberOfStudyGroup(userId, studyGroupId)) {
+            res.status(400).json({ error: "User is not a member of this group" })
+            return
+        }
+
+        const sessions = await studySessionModel.find({ parentStudyGroupId: studyGroupId })
+            .populate('createdBy')
+            .sort({ scheduledAt: 1 })
+
+        res.status(200).json(sessions)
+
+    } catch (e) {
+        console.log(e)
+        res.status(500).json({ error: "Server error" })
+    }
+})
+
+// Delete a session — only the creator can delete their own session
+studyGroupRouter.delete('/:studyGroupId/delete-session/:sessionId', authenticate, async (req, res) => {
+    try {
+        const studyGroupId = req.params.studyGroupId
+        const sessionId = req.params.sessionId
+        const userId = req.userObject.userId
+
+        if (!await isUserMemberOfStudyGroup(userId, studyGroupId)) {
+            res.status(400).json({ error: "User is not a member of this group" })
+            return
+        }
+
+        const session = await studySessionModel.findOne({ _id: sessionId, parentStudyGroupId: studyGroupId })
+        if (!session) {
+            res.status(404).json({ error: "Session not found" })
+            return
+        }
+
+        if (String(session.createdBy) !== String(userId)) {
+            res.status(403).json({ error: "Only the creator can delete this session" })
+            return
+        }
+
+        await studySessionModel.findOneAndDelete({ _id: sessionId })
+        res.status(200).json({ message: "Successfully deleted session" })
+
+    } catch (e) {
+        console.log(e)
+        res.status(500).json({ error: "Server error" })
+    }
 })
