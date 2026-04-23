@@ -2,6 +2,7 @@ import { Link, useNavigate } from "react-router-dom"
 import { authContext } from "../AuthContext"
 import { useContext, useEffect, useState } from "react"
 import { apiContext } from "../ApiContext"
+import { requestNotificationPermission, getExistingToken } from '../firebase'
 
 import './StudyGroups.css'
 
@@ -20,6 +21,8 @@ export function StudyGroups(){
     const [invitedGroups, setInvitedGroups] = useState([])
 
     const [tagInput, setTagInput] = useState('')
+
+    const [notificationsEnabled, setNotificationsEnabled] = useState(Notification.permission === 'granted')
 
     useEffect(() => {
         async function getUserInfo(){
@@ -101,6 +104,43 @@ export function StudyGroups(){
     useEffect(() => {
         getInvitedGroups()
     }, [])
+    useEffect(() => {
+        async function checkNotificationStatus(){
+            const token = await getExistingToken()
+            if (!token){
+                setNotificationsEnabled(false)
+                return
+            }
+            try{
+                const res = await api.post('/study-groups/get-fcm-status', { token })
+                setNotificationsEnabled(res.data.hasToken)
+            }catch(e){
+                setNotificationsEnabled(false)
+            }
+        }
+        checkNotificationStatus()
+    }, [])
+
+    async function handleEnableNotifications(){
+        const success = await requestNotificationPermission(api)
+        if (success) {
+            setNotificationsEnabled(true)
+            setMessage('Notifications enabled!')
+        } else {
+            setMessage('Could not enable notifications')
+        }
+    }
+
+    async function handleDisableNotifications(){
+        try{
+            const token = await getExistingToken()
+            await api.post('/study-groups/remove-fcm-token', { token })
+            setNotificationsEnabled(false)
+            setMessage('Notifications disabled')
+        }catch(e){
+            setMessage('Something went wrong')
+        }
+    }
 
     function handleInvitationDelete(invitationId){
         api.delete('/study-groups/delete-invitation', {studyGroupInvitationId: invitationId})
@@ -126,6 +166,9 @@ export function StudyGroups(){
             
                 {message && <p>{message}</p>}
                 <h1>Study groups!</h1>
+                <button onClick={notificationsEnabled ? handleDisableNotifications : handleEnableNotifications}>
+                    {notificationsEnabled ? 'Disable Notifications' : 'Enable Notifications'}
+                </button>
                 <Link to="/study-groups/create-study-group"><p>Create a group</p></Link>
                 <h3>Latest groups:</h3>
                 {latestGroups.map(g => {

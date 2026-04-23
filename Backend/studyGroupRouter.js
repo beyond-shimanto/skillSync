@@ -1,6 +1,7 @@
 import express from 'express'
 import { authenticate } from './server.js'
-import { userModel, studyGroupModel, studyGroupMembershipModel, studyGroupInvitationModel, studyGroupThreadModel, studyGroupThreadReplyModel, studyGroupChatTextModel, studyGroupResourceModel, studySessionModel } from './models.js'
+import { userModel, studyGroupModel, studyGroupMembershipModel, studyGroupInvitationModel, studyGroupThreadModel, studyGroupThreadReplyModel, studyGroupChatTextModel, studyGroupResourceModel, studySessionModel, fcmTokenModel } from './models.js'
+import admin from './firebase.js'
 import {io} from './server.js'
 
 import multer from 'multer'
@@ -586,3 +587,51 @@ studyGroupRouter.delete('/:studyGroupId/delete-session/:sessionId', authenticate
         res.status(500).json({ error: "Server error" })
     }
 })
+
+// Save token — just add it if it doesn't exist for this device
+studyGroupRouter.post('/save-fcm-token', authenticate, async (req, res) => {
+    try {
+        const userId = req.userObject.userId
+        const { token } = req.body
+
+        if (!token) {
+            res.status(400).json({ error: "No token provided" })
+            return
+        }
+
+        // upsert based on token itself, not userId
+        await fcmTokenModel.findOneAndUpdate(
+            { token },
+            { userId, token },
+            { upsert: true }
+        )
+
+        res.status(200).json({ message: "Token saved" })
+    } catch (e) {
+        console.log(e)
+        res.status(500).json({ error: "Server error" })
+    }
+})
+
+// Disable — delete only this specific device's token
+studyGroupRouter.post('/remove-fcm-token', authenticate, async (req, res) => {
+    try {
+        const { token } = req.body
+        await fcmTokenModel.findOneAndDelete({ token })
+        res.status(200).json({ message: "Token removed" })
+    } catch (e) {
+        res.status(500).json({ error: "Server error" })
+    }
+})
+
+// Check if THIS device is subscribed
+studyGroupRouter.post('/get-fcm-status', authenticate, async (req, res) => {
+    try {
+        const { token } = req.body
+        const tokenDoc = await fcmTokenModel.findOne({ token })
+        res.status(200).json({ hasToken: !!tokenDoc })
+    } catch (e) {
+        res.status(500).json({ error: "Server error" })
+    }
+})
+

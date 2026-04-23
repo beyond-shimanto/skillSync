@@ -1,5 +1,6 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
+import { getMessaging, getToken } from "firebase/messaging";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -16,3 +17,35 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 export const messaging = getMessaging(app);
+
+export async function getExistingToken() {
+    try {
+        if (Notification.permission !== 'granted') return null
+
+        const token = await getToken(messaging, {
+            vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY
+        })
+
+        return token || null
+    } catch (e) {
+        return null
+    }
+}
+
+export async function requestNotificationPermission(api) {
+    try {
+        const permission = await Notification.requestPermission()
+        if (permission !== 'granted') return false
+
+        const token = await getToken(messaging, {
+            vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY
+        })
+
+        await api.post('/study-groups/save-fcm-token', { token })
+        return true
+
+    } catch (e) {
+        console.log('Error getting notification permission:', e)
+        return false
+    }
+}

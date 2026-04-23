@@ -281,3 +281,17 @@ const studySessionSchema = new mongoose.Schema({
 studySessionSchema.index({ parentStudyGroupId: 1 })
 
 export const studySessionModel = mongoose.model('StudySession', studySessionSchema)
+
+const fcmTokenSchema = new mongoose.Schema({
+    userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
+    token: {
+        type: String,
+        required: true
+    }
+})
+
+export const fcmTokenModel = mongoose.model('FcmToken', fcmTokenSchema)

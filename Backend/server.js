@@ -9,6 +9,8 @@ import { userModel, refreshTokenModel, userAuthModel, mentorProfileModel } from 
 import { Server } from 'socket.io';
 import {createServer} from 'http';
 
+import { startNotificationJob } from './notificationJob.js'
+
 import { studyGroupRouter } from './studyGroupRouter.js';
 import { portfolioRouter } from './portfolio/portfolioRouter.js';
 import { mentorRouter } from './routes/mentor/mentorRoutes.js';
@@ -50,7 +52,7 @@ db.on('error', (error) => console.error(error))
 db.once('open', () => console.log('Connected to Database'))
 
 
-
+startNotificationJob()
 
 //auth routes
 
