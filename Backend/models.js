@@ -252,3 +252,32 @@ mentorProfileSchema.index({ expertiseTags: 1 })
 mentorProfileSchema.index({ hourlyRate: 1 })
 
 export const mentorProfileModel = mongoose.model('MentorProfile', mentorProfileSchema)
+
+const studySessionSchema = new mongoose.Schema({
+    parentStudyGroupId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'StudyGroup',
+        required: true
+    },
+    title: {
+        type: String,
+        required: true
+    },
+    description: {
+        type: String,
+        default: ''
+    },
+    scheduledAt: {
+        type: Date,
+        required: true
+    },
+    createdBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    }
+}, { timestamps: true })
+
+studySessionSchema.index({ parentStudyGroupId: 1 })
+
+export const studySessionModel = mongoose.model('StudySession', studySessionSchema)
