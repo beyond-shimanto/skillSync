@@ -30,4 +30,4 @@ build/
 .DS_Store
 Thumbs.db
 
-firebase-key.json
+serviceAccountKey.json
