@@ -1,9 +1,10 @@
 import { useContext, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { apiContext } from "../ApiContext";
 
 export function MentorDirectory() {
   const { api } = useContext(apiContext);
+  const navigate = useNavigate();
   const [mentors, setMentors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -42,6 +43,15 @@ export function MentorDirectory() {
   useEffect(() => {
     fetchMentors();
   }, []);
+
+  async function handleMessageMentor(mentorUserId) {
+    try {
+      const res = await api.post("/direct-messages/start-or-get-conversation", { otherUserId: mentorUserId });
+      navigate(`/direct-messages/${res.data.conversationId}`);
+    } catch {
+      // silently fail — user will see nothing happened
+    }
+  }
 
   function handleFilterChange(key, value) {
     const next = { ...filters, [key]: value };
@@ -132,9 +142,17 @@ export function MentorDirectory() {
                 </span>
               ))}
             </div>
-            <Link to={`/mentors/${mentor.mentorUserId}`} style={{ color: "#7fd1ff" }}>
-              View Profile
-            </Link>
+            <div style={{ display: "flex", gap: "10px", alignItems: "center", marginTop: "8px" }}>
+              <Link to={`/mentors/${mentor.mentorUserId}`} style={{ color: "#7fd1ff" }}>
+                View Profile
+              </Link>
+              <button
+                style={messageButtonStyle}
+                onClick={() => handleMessageMentor(mentor.mentorUserId)}
+              >
+                Message
+              </button>
+            </div>
           </div>
         ))}
     </div>
@@ -168,4 +186,14 @@ const tagStyle = {
   borderRadius: "12px",
   background: "#444",
   fontSize: "12px"
+};
+
+const messageButtonStyle = {
+  padding: "5px 12px",
+  background: "#00bcd4",
+  border: "none",
+  color: "white",
+  borderRadius: "6px",
+  cursor: "pointer",
+  fontSize: "13px"
 };

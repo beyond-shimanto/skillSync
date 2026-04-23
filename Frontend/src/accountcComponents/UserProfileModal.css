@@ -1,0 +1,143 @@
+.upm-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.upm-modal {
+    position: relative;
+    background: #1a1a2e;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
+    padding: 2rem 2rem 1.75rem;
+    width: 100%;
+    max-width: 360px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.upm-close {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.45);
+    cursor: pointer;
+    font-size: 0.9rem;
+    line-height: 1;
+    padding: 0.25rem;
+}
+
+.upm-close:hover {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.upm-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: rgba(4, 175, 237, 0.15);
+    border: 2px solid rgba(4, 175, 237, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.upm-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.upm-avatar-placeholder {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--accent-color);
+}
+
+.upm-username {
+    margin: 0;
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.upm-section {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.upm-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent-color);
+    opacity: 0.8;
+}
+
+.upm-bio {
+    margin: 0;
+    font-size: 0.93rem;
+    line-height: 1.55;
+    color: rgba(255, 255, 255, 0.75);
+}
+
+.upm-empty {
+    color: rgba(255, 255, 255, 0.35);
+    font-style: italic;
+}
+
+.upm-achievements {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.upm-achievements li {
+    background: rgba(4, 175, 237, 0.08);
+    border: 1px solid rgba(4, 175, 237, 0.15);
+    border-radius: 6px;
+    padding: 0.4rem 0.7rem;
+    font-size: 0.88rem;
+}
+
+.upm-message-btn {
+    width: 100%;
+    padding: 0.55rem 1rem;
+    background: var(--accent-color);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s;
+}
+
+.upm-message-btn:hover {
+    opacity: 0.85;
+}
+
+.upm-loading,
+.upm-error {
+    margin: 1rem 0;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.upm-error {
+    color: #ff6b6b;
+}

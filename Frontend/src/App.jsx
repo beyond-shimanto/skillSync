@@ -25,6 +25,8 @@ import { MentorProfileEditor } from './MentorComponents/MentorProfileEditor'
 
 import  JobTracker from "./JobTracker";
 import { AccountPage } from './accountcComponents/AccountPage';
+import { DirectMessageView } from './DirectMessageComponents/DirectMessageView';
+import { InboxView } from './DirectMessageComponents/InboxView';
 
 
 function App() {
@@ -50,6 +52,8 @@ function App() {
         <Route path="/mentors/:mentorUserId" element={<ProtectedRoute><MentorProfileView /></ProtectedRoute>} />
         <Route path="/mentors/profile/edit" element={<ProtectedRoute><MentorProfileEditor /></ProtectedRoute>} />
         <Route path="/account" element={<ProtectedRoute><AccountPage /></ProtectedRoute>} />
+        <Route path="/direct-messages/:conversationId" element={<ProtectedRoute><DirectMessageView /></ProtectedRoute>} />
+        <Route path="/inbox" element={<ProtectedRoute><InboxView /></ProtectedRoute>} />
       </Routes>
     </>
   )

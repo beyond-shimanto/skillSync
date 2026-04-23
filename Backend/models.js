@@ -306,3 +306,38 @@ const fcmTokenSchema = new mongoose.Schema({
 })
 
 export const fcmTokenModel = mongoose.model('FcmToken', fcmTokenSchema)
+
+const directConversationSchema = new mongoose.Schema({
+    participants: {
+        type: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User'
+        }],
+        validate: [arr => arr.length === 2, 'Must have exactly 2 participants']
+    }
+}, { timestamps: true })
+
+directConversationSchema.index({ participants: 1 })
+
+export const directConversationModel = mongoose.model('DirectConversation', directConversationSchema)
+
+const directMessageSchema = new mongoose.Schema({
+    conversationId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'DirectConversation',
+        required: true
+    },
+    senderId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
+    text: {
+        type: String,
+        required: true
+    }
+}, { timestamps: true })
+
+directMessageSchema.index({ conversationId: 1, createdAt: 1 })
+
+export const directMessageModel = mongoose.model('DirectMessage', directMessageSchema)

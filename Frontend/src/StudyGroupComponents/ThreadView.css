@@ -14,6 +14,16 @@
         }
     }
 
+    .thread-username-link {
+        cursor: pointer;
+        font-weight: 600;
+        color: var(--accent-color);
+    }
+
+    .thread-username-link:hover {
+        text-decoration: underline;
+    }
+
     .reply-input-container{
         height: 15dvh;
         position: absolute;
