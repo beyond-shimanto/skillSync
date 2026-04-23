@@ -30,6 +30,11 @@ export function GroupView(){
 
     const [resources, setResources] = useState([])
 
+    const [sessions, setSessions] = useState([])
+    const [sessionTitleInput, setSessionTitleInput] = useState('')
+    const [sessionDescriptionInput, setSessionDescriptionInput] = useState('')
+    const [sessionScheduledAtInput, setSessionScheduledAtInput] = useState('')
+
     const navigate = useNavigate()
 
     const [inviteUsernameInput, setInviteUsernameInput] = useState('')
@@ -82,6 +87,20 @@ export function GroupView(){
 
     useEffect(() => {
         getResources()
+    }, [])
+
+    async function getSessions(){
+        try{
+            const res = await api.get(`/study-groups/${groupId}/get-sessions`)
+            setSessions(res.data)
+        }
+        catch(e){
+            setMessage('Something went wrong')
+        }
+    }
+
+    useEffect(() => {
+        getSessions()
     }, [])
 
     async function handleInviteClick(e){
@@ -177,6 +196,39 @@ export function GroupView(){
         }
     }
 
+    async function handleSessionSubmit(e){
+        e.preventDefault()
+        if(!sessionTitleInput){
+            setMessage('Title cannot be empty')
+            return
+        }
+        if(!sessionScheduledAtInput){
+            setMessage('Please provide a date and time')
+            return
+        }
+        try{
+            await api.post(`/study-groups/${groupId}/create-session`, {
+                title: sessionTitleInput,
+                description: sessionDescriptionInput,
+                scheduledAt: sessionScheduledAtInput
+            })
+            setMessage('Session created!')
+            getSessions()
+        }catch(e){
+            setMessage('Something went wrong')
+        }
+    }
+
+    async function handleSessionDelete(sessionId){
+        try{
+            await api.delete(`/study-groups/${groupId}/delete-session/${sessionId}`)
+            setMessage('Session deleted')
+            getSessions()
+        }catch(e){
+            setMessage('Something went wrong')
+        }
+    }
+
 
     if(!isMember){
         return(
@@ -225,7 +277,7 @@ export function GroupView(){
                     <div className={openTab == 'threads'? 'tab-selector selected': 'tab-selector'} onClick={() => setOpenTab('threads')}>Threads</div>
                     <div className={openTab == 'resources'? 'tab-selector selected': 'tab-selector'} onClick={() => setOpenTab('resources')}>Resources</div>
                     <div className={openTab == 'invitation'? 'tab-selector selected': 'tab-selector'} onClick={() => setOpenTab('invitation')}>Invite</div>
-                    
+                    <div className={openTab == 'sessions'? 'tab-selector selected': 'tab-selector'} onClick={() => setOpenTab('sessions')}>Sessions</div>
                 </div>
 
 
@@ -293,6 +345,34 @@ export function GroupView(){
                                 <p>by: {m.uploaderId.username}</p>
                                 {m.isFileAvailable && <div className='view-button' onClick={(e) => handleDownloadResource(m._id)}><ArrowSvg></ArrowSvg></div>}
                                 {m.isFileAvailable && <p>File download is availabe</p>}
+                            </div>
+                        )
+                    })}
+
+                </div>
+                <div className="sessions-container" style={{display: openTab == 'sessions'? 'flex': 'none'}}>
+
+                    <h4>Create a new session!</h4>
+                    <p>Title: </p>
+                    <input onChange={(e) => setSessionTitleInput(e.target.value)} value={sessionTitleInput}></input>
+                    <p>Description: </p>
+                    <input onChange={(e) => setSessionDescriptionInput(e.target.value)} value={sessionDescriptionInput}></input>
+                    <p>Date & Time: </p>
+                    <input type='datetime-local' onChange={(e) => setSessionScheduledAtInput(e.target.value)} value={sessionScheduledAtInput}></input>
+                    <br></br>
+                    <button onClick={handleSessionSubmit}>Submit</button>
+
+                    {sessions.length > 0 && <h3>Upcoming Sessions: </h3>}
+                    {sessions.map(s => {
+                        return(
+                            <div key={s._id} className='card'>
+                                <h4>{s.title}</h4>
+                                <p>{s.description}</p>
+                                <p>Scheduled at: {new Date(s.scheduledAt).toLocaleString()}</p>
+                                <p>Created by: {s.createdBy.username}</p>
+                                {s.createdBy._id === userId && 
+                                    <button onClick={() => handleSessionDelete(s._id)}>Delete</button>
+                                }
                             </div>
                         )
                     })}
