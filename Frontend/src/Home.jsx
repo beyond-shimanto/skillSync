@@ -4,6 +4,7 @@ import { authContext } from "./AuthContext"
 import { apiContext } from "./ApiContext"
 import './Home.css'
 import { MentorDashboard } from "./MentorComponents/MentorDashboard"
+import accountLogo from "./accountcComponents/logo.png"
 
 
 export function Home(){
@@ -80,7 +81,16 @@ export function Home(){
                     <p>Welcome back, {username}!</p>
                 </div>
                 
-                <button onClick={(e) => handleLogout()}>Logout</button>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                    <button
+                        onClick={() => navigate('/account')}
+                        style={{ background: "none", border: "none", padding: "0.25rem", cursor: "pointer", display: "flex", alignItems: "center" }}
+                        title="My Account"
+                    >
+                        <img src={accountLogo} alt="Account" style={{ width: "32px", height: "32px", borderRadius: "50%", objectFit: "cover" }} />
+                    </button>
+                    <button onClick={(e) => handleLogout()}>Logout</button>
+                </div>
              </div>
              <div className="content-container">
 

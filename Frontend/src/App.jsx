@@ -24,6 +24,7 @@ import { MentorProfileView } from './MentorComponents/MentorProfileView'
 import { MentorProfileEditor } from './MentorComponents/MentorProfileEditor'
 
 import  JobTracker from "./JobTracker";
+import { AccountPage } from './accountcComponents/AccountPage';
 
 
 function App() {
@@ -48,6 +49,7 @@ function App() {
         <Route path="/mentors" element={<ProtectedRoute><MentorDirectory /></ProtectedRoute>} />
         <Route path="/mentors/:mentorUserId" element={<ProtectedRoute><MentorProfileView /></ProtectedRoute>} />
         <Route path="/mentors/profile/edit" element={<ProtectedRoute><MentorProfileEditor /></ProtectedRoute>} />
+        <Route path="/account" element={<ProtectedRoute><AccountPage /></ProtectedRoute>} />
       </Routes>
     </>
   )
