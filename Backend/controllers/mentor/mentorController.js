@@ -140,7 +140,7 @@ export async function getMentorProfileByUserId(req, res) {
     return res.status(400).json({ error: "Invalid mentor id." });
   }
 
-  const user = await userModel.findById(mentorUserId).select("username userType tags");
+  const user = await userModel.findById(mentorUserId).select("username userType tags bio");
   if (!user || user.userType !== "mentor") {
     return res.status(404).json({ error: "Mentor not found." });
   }
@@ -150,10 +150,13 @@ export async function getMentorProfileByUserId(req, res) {
     return res.status(404).json({ error: "Mentor profile not found." });
   }
 
+  const profileObj = profile.toObject();
+  if (!profileObj.bio) profileObj.bio = user.bio || "";
+
   return res.status(200).json({
     mentorUserId: user._id,
     username: user.username,
     userTags: user.tags,
-    profile
+    profile: profileObj
   });
 }

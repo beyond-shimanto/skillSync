@@ -220,9 +220,14 @@ export function AccountPage() {
               </button>
             </>
           ) : (
-            <button className="account-edit-btn" onClick={() => setEditing(true)}>
-              Edit Profile
-            </button>
+            <>
+              <button className="account-inbox-btn" onClick={() => navigate("/inbox")}>
+                Inbox
+              </button>
+              <button className="account-edit-btn" onClick={() => setEditing(true)}>
+                Edit Profile
+              </button>
+            </>
           )}
         </div>
       </div>

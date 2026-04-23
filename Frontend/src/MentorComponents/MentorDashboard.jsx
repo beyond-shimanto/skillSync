@@ -48,7 +48,7 @@ export function MentorDashboard({ username, onLogout }) {
       { label: "My Sessions", icon: "📅", action: () => {} },
       { label: "Attendance Tracker", icon: "✅", action: () => {} },
       { label: "Earnings / Payments", icon: "💳", action: () => {} },
-      { label: "Messages", icon: "💬", action: () => {} },
+      { label: "Messages", icon: "💬", action: () => navigate("/inbox") },
       { label: "Reviews & Reports", icon: "⭐", action: () => {} }
     ],
     [navigate]

@@ -243,6 +243,21 @@
   justify-content: flex-end;
 }
 
+.account-inbox-btn {
+  padding: 0.6rem 1.5rem;
+  background: rgba(4, 175, 237, 0.12);
+  border: 1px solid rgba(4, 175, 237, 0.35);
+  color: var(--accent-color);
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.account-inbox-btn:hover {
+  background: rgba(4, 175, 237, 0.22);
+}
+
 .account-edit-btn,
 .account-save-btn {
   padding: 0.6rem 1.5rem;

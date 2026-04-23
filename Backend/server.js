@@ -16,6 +16,7 @@ import { portfolioRouter } from './portfolio/portfolioRouter.js';
 import { mentorRouter } from './routes/mentor/mentorRoutes.js';
 import { aiRouter } from './ai/aiRouter.js';
 import { accountRouter } from './account/accountRouter.js';
+import { directMessageRouter } from './directMessageRouter.js';
 
 const app = express()
 
@@ -31,6 +32,9 @@ io.on("connection", (socket) => {
     socket.join(`studyGroupChatRoom_${studyGroupId}`)
   })
 
+  socket.on("joinDirectMessageRoom", (conversationId) => {
+    socket.join(`dmRoom_${conversationId}`)
+  })
 })
 
 app.use(cors({exposedHeaders: ['Content-Disposition']}))
@@ -43,6 +47,7 @@ app.use("/api/jobs", jobRoutes);
 app.use('/mentors', mentorRouter)
 app.use('/ai', aiRouter)
 app.use('/account', accountRouter)
+app.use('/direct-messages', directMessageRouter)
 
 const port = 5000;
 server.listen(port)

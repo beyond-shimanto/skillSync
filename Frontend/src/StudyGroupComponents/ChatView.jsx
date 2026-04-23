@@ -1,11 +1,10 @@
 
-import { useEffect } from "react"
+import { useEffect, useState, useContext } from "react"
 import { useParams } from "react-router-dom"
 import {io} from 'socket.io-client'
 import { apiContext } from "../ApiContext"
-import { useContext } from "react"
-import { useState } from "react"
 import { authContext } from "../AuthContext"
+import { UserProfileModal } from "../accountcComponents/UserProfileModal"
 import './ChatView.css'
 
 export function ChatView(){
@@ -16,6 +15,7 @@ export function ChatView(){
     const [message, setMessage] = useState('')
     const [newTextInput, setNewTextInput] = useState('')
     const {username} = useContext(authContext)
+    const [viewingUserId, setViewingUserId] = useState(null)
 
     useEffect(() => {
         const newSocket = io('http://localhost:5000/')
@@ -56,32 +56,44 @@ export function ChatView(){
 
     return (
         <>
-            
+
             <div className="chat-view">
                 <div className="texts-container">
                     {texts.map(t => {
                     return (
-                        <div className={t.texterId.username == username? 'text own': 'text'}>
-                            <p>{t.texterId.username} : {t.text}</p>
-                            
+                        <div key={t._id} className={t.texterId.username == username? 'text own': 'text'}>
+                            <p>
+                                <span
+                                    className="chat-username-link"
+                                    onClick={() => setViewingUserId(t.texterId._id)}
+                                >
+                                    {t.texterId.username}
+                                </span>
+                                {' '}: {t.text}
+                            </p>
                         </div>
                     )
                 })}
                 </div>
 
-                
+
                 <div className="text-reply-input-container">
-                    
+
                     <input onChange={(e) => setNewTextInput(e.target.value)} value={newTextInput}></input>
                     <button onClick={handleNewTextSubmit} >Send</button>
                 </div>
-            
+
             </div>
-            
-            
-            
+
+            {viewingUserId && (
+                <UserProfileModal
+                    userId={viewingUserId}
+                    onClose={() => setViewingUserId(null)}
+                />
+            )}
+
         </>
-        
+
 
     )
 }

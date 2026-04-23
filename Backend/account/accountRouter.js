@@ -33,6 +33,22 @@ const upload = multer({
     }
 })
 
+accountRouter.get('/profile/:userId', authenticate, async (req, res) => {
+    try {
+        const user = await userModel.findById(req.params.userId)
+        if (!user) return res.status(404).json({ error: 'User not found' })
+
+        res.status(200).json({
+            username: user.username,
+            bio: user.bio,
+            profilePicture: user.profilePicture,
+            achievements: user.achievements
+        })
+    } catch (e) {
+        res.status(500).json({ error: 'Server error' })
+    }
+})
+
 accountRouter.get('/profile', authenticate, async (req, res) => {
     try {
         const user = await userModel.findById(req.userObject.userId)

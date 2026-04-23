@@ -2,6 +2,7 @@
 import { useState,useEffect, useContext } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { apiContext } from "../ApiContext"
+import { UserProfileModal } from "../accountcComponents/UserProfileModal"
 import './ThreadView.css'
 
 export function ThreadView(){
@@ -12,6 +13,7 @@ export function ThreadView(){
     const {groupId, threadId} = useParams()
     const [message, setMessage] = useState('')
     const {api} = useContext(apiContext)
+    const [viewingUserId, setViewingUserId] = useState(null)
 
     const navigate = useNavigate()
 
@@ -70,14 +72,14 @@ export function ThreadView(){
                 <button onClick={handleReplySubmit} >Submit</button>
             </div>
             <h3>Main Thread:</h3>
-            {thread && 
+            {thread &&
             <div className="card">
                 <h4>{thread.title}</h4>
                 <p>{thread.description}</p>
-                <p>Made by: {thread.authorId.username}</p>
+                <p>Made by: <span className="thread-username-link" onClick={() => setViewingUserId(thread.authorId._id)}>{thread.authorId.username}</span></p>
             </div>
             }
-            
+
             <h3>Replies:</h3>
             <div className="replies-container">
 
@@ -87,13 +89,20 @@ export function ThreadView(){
 
                         <div key={r._id} className="card" >
                             <h4>text: {r.title}</h4>
-                            <p>by: {r.replierId.username}</p>
-                            
+                            <p>by: <span className="thread-username-link" onClick={() => setViewingUserId(r.replierId._id)}>{r.replierId.username}</span></p>
+
                         </div>
                     )
                 })}
 
             </div>
+
+            {viewingUserId && (
+                <UserProfileModal
+                    userId={viewingUserId}
+                    onClose={() => setViewingUserId(null)}
+                />
+            )}
             
             
 
