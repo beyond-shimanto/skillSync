@@ -2,6 +2,7 @@ import { useState, useEffect, useContext, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiContext } from "../ApiContext";
 import { authContext } from "../AuthContext";
+import { SkillTagInput } from "../components/SkillTagInput";
 import "./AccountPage.css";
 
 export function AccountPage() {
@@ -18,15 +19,20 @@ export function AccountPage() {
   const [saving, setSaving] = useState(false);
   const [uploadingPic, setUploadingPic] = useState(false);
   const [error, setError] = useState("");
+  const [skillsWanted, setSkillsWanted] = useState([]);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
     async function fetchProfile() {
       try {
-        const res = await api.get("/account/profile");
+        const res = await api.get("account/profile");
         setProfile(res.data);
         setEditBio(res.data.bio);
         setEditAchievements(res.data.achievements ?? []);
+
+        const existingSkills = res.data.skillsWanted ?? [];
+        setSkillsWanted(existingSkills.map(s => s._id || s));
+
       } catch (e) {
         setError("Failed to load profile.");
       } finally {
@@ -40,11 +46,19 @@ export function AccountPage() {
     setSaving(true);
     setError("");
     try {
-      const res = await api.put("/account/profile", {
+      await api.put("account/profile", {
         bio: editBio,
         achievements: editAchievements,
       });
-      setProfile(res.data);
+
+      await api.put("api/skills/save", { skillsWanted });
+
+      const refreshed = await api.get("account/profile");
+      setProfile(refreshed.data);
+
+      const refreshedSkills = refreshed.data.skillsWanted ?? [];
+      setSkillsWanted(refreshedSkills.map(s => s._id || s));
+
       setEditing(false);
     } catch (e) {
       setError("Failed to save changes.");
@@ -57,6 +71,8 @@ export function AccountPage() {
     setEditBio(profile.bio);
     setEditAchievements(profile.achievements ?? []);
     setNewAchievement("");
+    const existingSkills = profile.skillsWanted ?? [];
+    setSkillsWanted(existingSkills.map(s => s._id || s));
     setEditing(false);
   };
 
@@ -83,7 +99,7 @@ export function AccountPage() {
     try {
       const formData = new FormData();
       formData.append("profilePicture", file);
-      const res = await api.postFormData("/account/profile/picture", formData);
+      const res = await api.postFormData("account/profile/picture", formData);
       setProfile((prev) => ({ ...prev, profilePicture: res.data.profilePicture }));
     } catch (e) {
       setError("Failed to upload picture.");
@@ -165,6 +181,40 @@ export function AccountPage() {
 
         <div className="account-section">
           <div className="account-section-header">
+            <h4>Skills I want to learn</h4>
+          </div>
+          {editing ? (
+            <SkillTagInput
+              selected={skillsWanted}
+              onChange={setSkillsWanted}
+              placeholder="Pick skills you want to learn"
+            />
+          ) : (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+              {(profile?.skillsWanted ?? []).length === 0 ? (
+                <span className="account-empty">No skills selected yet.</span>
+              ) : (
+                (profile?.skillsWanted ?? []).map(skill => (
+                  <span
+                    key={skill._id || skill}
+                    style={{
+                      padding: "3px 10px",
+                      borderRadius: "12px",
+                      background: "#00bcd4",
+                      color: "#000",
+                      fontSize: "12px"
+                    }}
+                  >
+                    {skill.name || skill}
+                  </span>
+                ))
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="account-section">
+          <div className="account-section-header">
             <h4>Achievements</h4>
           </div>
           <ul className="account-achievements-list">
@@ -183,8 +233,7 @@ export function AccountPage() {
                 </li>
               )
             )}
-            {(editing ? editAchievements : profile?.achievements ?? []).length ===
-              0 && (
+            {(editing ? editAchievements : profile?.achievements ?? []).length === 0 && (
               <li className="account-empty">No achievements yet.</li>
             )}
           </ul>

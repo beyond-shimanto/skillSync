@@ -17,6 +17,7 @@ import { mentorRouter } from './routes/mentor/mentorRoutes.js';
 import { aiRouter } from './ai/aiRouter.js';
 import { accountRouter } from './account/accountRouter.js';
 import { directMessageRouter } from './directMessageRouter.js';
+import { skillRouter } from './routes/skillRoutes.js';
 
 const app = express()
 
@@ -48,6 +49,7 @@ app.use('/mentors', mentorRouter)
 app.use('/ai', aiRouter)
 app.use('/account', accountRouter)
 app.use('/direct-messages', directMessageRouter)
+app.use('/api/skills', skillRouter)
 
 const port = 5000;
 server.listen(port)
@@ -63,7 +65,6 @@ db.once('open', () => console.log('Connected to Database'))
 
 
 startNotificationJob()
-
 //auth routes
 
 app.get('/', async (req, res) => {

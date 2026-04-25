@@ -8,14 +8,22 @@ export function MentorDirectory() {
   const [mentors, setMentors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [allSkills, setAllSkills] = useState([]);   // for the skill dropdown
   const [filters, setFilters] = useState({
     tag: "",
     minPrice: "",
     maxPrice: "",
     minRating: "",
     sortBy: "experience",
-    sortOrder: "desc"
+    sortOrder: "desc",
+    skill: ""
   });
+
+  useEffect(() => {
+    api.get("api/skills")
+      .then(res => setAllSkills(res.data))
+      .catch(() => {});
+  }, []);
 
   async function fetchMentors(currentFilters = filters) {
     setLoading(true);
@@ -30,6 +38,7 @@ export function MentorDirectory() {
       if (currentFilters.minRating !== "") params.minRating = currentFilters.minRating;
       if (currentFilters.sortBy) params.sortBy = currentFilters.sortBy;
       if (currentFilters.sortOrder) params.sortOrder = currentFilters.sortOrder;
+      if (currentFilters.skill) params.skill = currentFilters.skill;   // new
 
       const res = await api.get("/mentors", params);
       setMentors(Array.isArray(res.data) ? res.data : []);
@@ -49,7 +58,7 @@ export function MentorDirectory() {
       const res = await api.post("/direct-messages/start-or-get-conversation", { otherUserId: mentorUserId });
       navigate(`/direct-messages/${res.data.conversationId}`);
     } catch {
-      // silently fail — user will see nothing happened
+      // silently fail
     }
   }
 
@@ -69,6 +78,17 @@ export function MentorDirectory() {
           onChange={(e) => handleFilterChange("tag", e.target.value)}
           style={inputStyle}
         />
+
+        <select
+          value={filters.skill}
+          onChange={(e) => handleFilterChange("skill", e.target.value)}
+          style={inputStyle}
+        >
+          <option value="">Filter by skill</option>
+          {allSkills.map(skill => (
+            <option key={skill._id} value={skill._id}>{skill.name}</option>
+          ))}
+        </select>
 
         <input
           type="number"
@@ -135,13 +155,28 @@ export function MentorDirectory() {
               Experience: {mentor.yearsOfExperience || 0} years | Price: ${mentor.hourlyRate || 0}/hr
             </p>
             <p>Rating: {mentor.averageRating || 0} ({mentor.reviewCount || 0} reviews)</p>
-            <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "10px" }}>
+
+            <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "6px" }}>
               {(mentor.expertiseTags || []).map((tag) => (
                 <span key={`${mentor.mentorUserId}-${tag}`} style={tagStyle}>
                   {tag}
                 </span>
               ))}
             </div>
+
+            {(mentor.expertise || []).length > 0 && (
+              <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "10px" }}>
+                {mentor.expertise.map((skill) => (
+                  <span
+                    key={skill._id || skill}
+                    style={{ ...tagStyle, background: "#00bcd4", color: "#000" }}
+                  >
+                    {skill.name || skill}
+                  </span>
+                ))}
+              </div>
+            )}
+
             <div style={{ display: "flex", gap: "10px", alignItems: "center", marginTop: "8px" }}>
               <Link to={`/mentors/${mentor.mentorUserId}`} style={{ color: "#7fd1ff" }}>
                 View Profile
