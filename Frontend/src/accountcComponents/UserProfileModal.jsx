@@ -79,6 +79,28 @@ export function UserProfileModal({ userId, onClose }) {
                             </p>
                         </div>
 
+                        {profile.skillsWanted?.length > 0 && (
+                            <div className="upm-section">
+                                <span className="upm-label">Skills they want to learn</span>
+                                <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "6px" }}>
+                                    {profile.skillsWanted.map(skill => (
+                                        <span
+                                            key={skill._id || skill}
+                                            style={{
+                                                padding: "3px 10px",
+                                                borderRadius: "12px",
+                                                background: "#00bcd4",
+                                                color: "#000",
+                                                fontSize: "12px"
+                                            }}
+                                        >
+                                            {skill.name || skill}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
                         {profile.achievements?.length > 0 && (
                             <div className="upm-section">
                                 <span className="upm-label">Achievements</span>

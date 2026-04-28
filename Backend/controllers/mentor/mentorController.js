@@ -474,7 +474,7 @@ export async function handleStripeWebhook(req, res) {
 }
 
 export async function listMentors(req, res) {
-  const { tag, minPrice, maxPrice, minRating, sortBy, sortOrder } = req.query;
+  const { tag, minPrice, maxPrice, minRating, sortBy, sortOrder, skill } = req.query;
   const profileMatch = {};
 
   if (tag) {
@@ -510,6 +510,16 @@ export async function listMentors(req, res) {
   const mappedSortField = sortFieldMap[sortBy] || "updatedAt";
   const mappedSortOrder = sortOrder === "asc" ? 1 : -1;
 
+  let skillUserIds = null;
+  if (skill) {
+    const { userModel: UserModel } = await import('../../models.js');
+    const matchingUsers = await UserModel.find(
+      { expertise: skill },
+      { _id: 1 }
+    );
+    skillUserIds = matchingUsers.map(u => u._id);
+  }
+
   const mentors = await mentorProfileModel.aggregate([
     { $match: profileMatch },
     {
@@ -521,13 +531,21 @@ export async function listMentors(req, res) {
       }
     },
     { $unwind: "$mentorUser" },
-    { $match: { "mentorUser.userType": "mentor" } },
+    {
+      $match: {
+        "mentorUser.userType": "mentor",
+        ...(skillUserIds !== null && {
+          "mentorUser._id": { $in: skillUserIds }
+        })
+      }
+    },
     {
       $project: {
         _id: 0,
         mentorUserId: "$mentorUser._id",
         username: "$mentorUser.username",
         userTags: "$mentorUser.tags",
+        expertise: "$mentorUser.expertise",
         bio: 1,
         expertiseTags: 1,
         yearsOfExperience: 1,

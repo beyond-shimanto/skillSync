@@ -35,14 +35,17 @@ const upload = multer({
 
 accountRouter.get('/profile/:userId', authenticate, async (req, res) => {
     try {
-        const user = await userModel.findById(req.params.userId)
+        const user = await userModel
+            .findById(req.params.userId)
+            .populate('skillsWanted')
         if (!user) return res.status(404).json({ error: 'User not found' })
 
         res.status(200).json({
             username: user.username,
             bio: user.bio,
             profilePicture: user.profilePicture,
-            achievements: user.achievements
+            achievements: user.achievements,
+            skillsWanted: user.skillsWanted
         })
     } catch (e) {
         res.status(500).json({ error: 'Server error' })
@@ -51,14 +54,17 @@ accountRouter.get('/profile/:userId', authenticate, async (req, res) => {
 
 accountRouter.get('/profile', authenticate, async (req, res) => {
     try {
-        const user = await userModel.findById(req.userObject.userId)
+        const user = await userModel
+            .findById(req.userObject.userId)
+            .populate('skillsWanted')
         if (!user) return res.status(404).json({ error: 'User not found' })
 
         res.status(200).json({
             username: user.username,
             bio: user.bio,
             profilePicture: user.profilePicture,
-            achievements: user.achievements
+            achievements: user.achievements,
+            skillsWanted: user.skillsWanted
         })
     } catch (e) {
         res.status(500).json({ error: 'Server error' })
@@ -76,14 +82,15 @@ accountRouter.put('/profile', authenticate, async (req, res) => {
                 ...(achievements !== undefined && { achievements })
             },
             { new: true }
-        )
+        ).populate('skillsWanted')
         if (!user) return res.status(404).json({ error: 'User not found' })
 
         res.status(200).json({
             username: user.username,
             bio: user.bio,
             profilePicture: user.profilePicture,
-            achievements: user.achievements
+            achievements: user.achievements,
+            skillsWanted: user.skillsWanted
         })
     } catch (e) {
         res.status(500).json({ error: 'Server error' })

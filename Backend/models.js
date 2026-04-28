@@ -45,7 +45,9 @@ const userSchema = new mongoose.Schema({
     achievements: {
         type: [{ type: String, trim: true }],
         default: []
-    }
+    },
+    skillsWanted: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Skill' }],
+    expertise:    [{ type: mongoose.Schema.Types.ObjectId, ref: 'Skill' }],
 
 })
 
@@ -107,8 +109,6 @@ const studyGroupMembershipSchema = new mongoose.Schema({
         default: Date.now
     }
 })
-
-
 
 export const studyGroupMembershipModel = mongoose.model('StudyGroupMembership', studyGroupMembershipSchema)
 
@@ -473,3 +473,21 @@ const directMessageSchema = new mongoose.Schema({
 directMessageSchema.index({ conversationId: 1, createdAt: 1 })
 
 export const directMessageModel = mongoose.model('DirectMessage', directMessageSchema)
+
+
+const skillSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
+    unique: true,
+    trim: true,
+  },
+  category: {
+    type: String,
+    enum: ['frontend', 'backend', 'devops', 'design', 'data', 'mobile', 'other'],
+    default: 'other',
+  },
+});
+
+const Skill = mongoose.model('Skill', skillSchema);
+export { Skill }

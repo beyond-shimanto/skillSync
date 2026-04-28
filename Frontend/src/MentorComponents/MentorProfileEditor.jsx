@@ -1,5 +1,6 @@
 import { useContext, useEffect, useState } from "react";
 import { apiContext } from "../ApiContext";
+import { SkillTagInput } from "../components/SkillTagInput";
 
 export function MentorProfileEditor({ onSaved } = {}) {
   const { api } = useContext(apiContext);
@@ -9,6 +10,7 @@ export function MentorProfileEditor({ onSaved } = {}) {
     yearsOfExperience: 0,
     hourlyRate: 0
   });
+  const [expertise, setExpertise] = useState([]);
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(true);
 
@@ -25,6 +27,12 @@ export function MentorProfileEditor({ onSaved } = {}) {
           yearsOfExperience: profile.yearsOfExperience || 0,
           hourlyRate: profile.hourlyRate || 0
         });
+
+        const userRes = await api.get("get-profile-info");
+        const existingExpertise = userRes.data.expertise || [];
+        // expertise may come back as objects or IDs depending on populate
+        setExpertise(existingExpertise.map(s => s._id || s));
+
       } catch (e) {
         if (e.response?.status === 404) {
           setStatus("No mentor profile yet. Fill the form to create one.");
@@ -56,6 +64,8 @@ export function MentorProfileEditor({ onSaved } = {}) {
         yearsOfExperience: Number(form.yearsOfExperience),
         hourlyRate: Number(form.hourlyRate)
       });
+
+      await api.put("api/skills/save", { expertise });
       onSaved?.(res.data);
       setStatus("Mentor profile saved.");
     } catch (e2) {
@@ -93,6 +103,12 @@ export function MentorProfileEditor({ onSaved } = {}) {
             style={inputStyle}
           />
         </label>
+
+        <SkillTagInput
+          selected={expertise}
+          onChange={setExpertise}
+          placeholder="Expertise skills (select from list)"
+        />
         <button style={buttonStyle} type="submit">
           Save Profile
         </button>
