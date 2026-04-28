@@ -14,6 +14,7 @@ import { startNotificationJob } from './notificationJob.js'
 import { studyGroupRouter } from './studyGroupRouter.js';
 import { portfolioRouter } from './portfolio/portfolioRouter.js';
 import { mentorRouter } from './routes/mentor/mentorRoutes.js';
+import { handleStripeWebhook } from './controllers/mentor/mentorController.js';
 import { aiRouter } from './ai/aiRouter.js';
 import { accountRouter } from './account/accountRouter.js';
 import { directMessageRouter } from './directMessageRouter.js';
@@ -38,6 +39,7 @@ io.on("connection", (socket) => {
 })
 
 app.use(cors({exposedHeaders: ['Content-Disposition']}))
+app.post('/stripe/webhook', express.raw({ type: 'application/json' }), handleStripeWebhook)
 app.use(express.json())
 app.use('/uploads', express.static('uploads'))
 

@@ -131,7 +131,8 @@ export function Home(){
                     <Link to='/portfolios/my'>My Portfolios</Link>
                     <Link to='/jobs'>Job Tracker</Link>
                     <Link to='/chatbot'>AI Chatbot</Link>
-                    <Link to='/mentors'>Mentor Directory</Link>
+                    <Link to='/mentors'>Find Mentors</Link>
+                    <Link to='/mentors/sessions'>My Mentor Sessions</Link>
                     {userType === 'mentor' && <Link to='/mentors/profile/edit'>Edit Mentor Profile</Link>}
                 </div>
              </div>

@@ -33,7 +33,7 @@ export function MentorDirectory() {
 
       const res = await api.get("/mentors", params);
       setMentors(Array.isArray(res.data) ? res.data : []);
-    } catch (e) {
+    } catch {
       setError("Failed to load mentors.");
     } finally {
       setLoading(false);
@@ -60,7 +60,7 @@ export function MentorDirectory() {
 
   return (
     <div style={{ padding: "20px", color: "white" }}>
-      <h2>Mentor Directory</h2>
+      <h2>Find Mentors</h2>
 
       <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "16px" }}>
         <input
