@@ -89,6 +89,21 @@ export function MentorProfileView() {
         </div>
       </section>
 
+      <section style={sectionStyle}>
+        <h3>Recent Reviews</h3>
+        {(data.recentReviews || []).length === 0 ? <p>No reviews yet.</p> : null}
+        <div style={reviewGridStyle}>
+          {(data.recentReviews || []).map((review) => (
+            <div key={review.id} style={reviewCardStyle}>
+              <strong>{review.learnerName || "Student"}</strong>
+              <span style={reviewStarsStyle}>{renderStars(review.rating)}</span>
+              <span>{review.packageTitle || "Mentor session"}</span>
+              {review.comment ? <p style={{ margin: 0 }}>{review.comment}</p> : null}
+            </div>
+          ))}
+        </div>
+      </section>
+
       <div style={bookingCardStyle}>
         <h3>Book a Package</h3>
         {packages.length === 0 ? <p>No packages available yet.</p> : null}
@@ -175,6 +190,25 @@ const sectionStyle = {
   marginBottom: "16px"
 };
 
+const reviewGridStyle = {
+  display: "grid",
+  gap: "10px",
+  maxWidth: "620px"
+};
+
+const reviewCardStyle = {
+  background: "#202633",
+  border: "1px solid #30394a",
+  borderRadius: "8px",
+  display: "grid",
+  gap: "6px",
+  padding: "12px"
+};
+
+const reviewStarsStyle = {
+  color: "#f7c948"
+};
+
 const bookingCardStyle = {
   background: "#2c2c2c",
   padding: "14px",
@@ -217,3 +251,8 @@ const buttonStyle = {
   color: "white",
   cursor: "pointer"
 };
+
+function renderStars(rating) {
+  const safeRating = Math.max(0, Math.min(5, Math.round(Number(rating) || 0)));
+  return `${"★".repeat(safeRating)}${"☆".repeat(5 - safeRating)}`;
+}

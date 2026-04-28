@@ -388,6 +388,18 @@ const mentorSessionSchema = new mongoose.Schema({
     },
     attendanceMarkedAt: {
         type: Date
+    },
+    reviewRating: {
+        type: Number,
+        min: 1,
+        max: 5
+    },
+    reviewText: {
+        type: String,
+        default: ''
+    },
+    reviewSubmittedAt: {
+        type: Date
     }
 }, { timestamps: true })
 

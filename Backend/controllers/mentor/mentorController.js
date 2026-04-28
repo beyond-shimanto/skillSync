@@ -39,7 +39,10 @@ function serializeSession(session) {
     stripePaymentIntentId: session.stripePaymentIntentId,
     attendanceStatus: session.attendanceStatus,
     notes: session.notes,
-    attendanceMarkedAt: session.attendanceMarkedAt
+    attendanceMarkedAt: session.attendanceMarkedAt,
+    reviewRating: session.reviewRating,
+    reviewText: session.reviewText,
+    reviewSubmittedAt: session.reviewSubmittedAt
   };
 }
 
@@ -61,6 +64,61 @@ function serializePackage(pkg) {
 function normalizeCurrency(value) {
   const currency = String(value || "usd").trim().toLowerCase();
   return /^[a-z]{3}$/.test(currency) ? currency : "usd";
+}
+
+function serializeReview(session) {
+  return {
+    id: session._id,
+    sessionId: session._id,
+    learnerName: session.studentUserId?.username || "Student",
+    packageTitle: session.packageTitleSnapshot || session.topic || "Mentor session",
+    rating: session.reviewRating,
+    comment: session.reviewText || "",
+    submittedAt: session.reviewSubmittedAt
+  };
+}
+
+async function getRecentMentorReviews(mentorUserId, limit = 3) {
+  const reviews = await mentorSessionModel
+    .find({
+      mentorUserId,
+      reviewSubmittedAt: { $exists: true },
+      reviewRating: { $gte: 1, $lte: 5 }
+    })
+    .sort({ reviewSubmittedAt: -1 })
+    .limit(limit)
+    .populate("studentUserId", "username")
+    .lean();
+
+  return reviews.map(serializeReview);
+}
+
+async function updateMentorReviewStats(mentorUserId) {
+  const [stats] = await mentorSessionModel.aggregate([
+    {
+      $match: {
+        mentorUserId: new mongoose.Types.ObjectId(String(mentorUserId)),
+        reviewSubmittedAt: { $exists: true },
+        reviewRating: { $gte: 1, $lte: 5 }
+      }
+    },
+    {
+      $group: {
+        _id: "$mentorUserId",
+        averageRating: { $avg: "$reviewRating" },
+        reviewCount: { $sum: 1 }
+      }
+    }
+  ]);
+
+  return mentorProfileModel.findOneAndUpdate(
+    { mentorUserId },
+    {
+      averageRating: stats?.averageRating || 0,
+      reviewCount: stats?.reviewCount || 0
+    },
+    { new: true }
+  );
 }
 
 export async function upsertMentorProfile(req, res) {
@@ -108,10 +166,13 @@ export async function getMyMentorProfile(req, res) {
     return res.status(404).json({ error: "Mentor profile not found." });
   }
 
+  const recentReviews = await getRecentMentorReviews(user._id);
+
   return res.status(200).json({
     mentorUserId: user._id,
     username: user.username,
-    profile
+    profile,
+    recentReviews
   });
 }
 
@@ -409,6 +470,53 @@ export async function updateMentorSessionAttendance(req, res) {
   return res.status(200).json(serializeSession(session.toObject()));
 }
 
+export async function submitMentorSessionReview(req, res) {
+  const { sessionId } = req.params;
+  const studentUserId = req.userObject?.userId;
+
+  if (!mongoose.Types.ObjectId.isValid(sessionId)) {
+    return res.status(400).json({ error: "Invalid session id." });
+  }
+
+  const rating = Number(req.body.rating);
+  if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+    return res.status(400).json({ error: "Review rating must be between 1 and 5." });
+  }
+
+  const session = await mentorSessionModel.findById(sessionId);
+  if (!session) {
+    return res.status(404).json({ error: "Session not found." });
+  }
+
+  if (String(session.studentUserId) !== String(studentUserId)) {
+    return res.status(403).json({ error: "Only the student who booked this session can review it." });
+  }
+
+  if (session.bookingStatus !== "booked" || session.paymentStatus !== "paid" || session.attendanceStatus !== "attended") {
+    return res.status(400).json({ error: "Only paid attended sessions can be reviewed." });
+  }
+
+  if (session.reviewSubmittedAt) {
+    return res.status(400).json({ error: "This session has already been reviewed." });
+  }
+
+  session.reviewRating = rating;
+  session.reviewText = String(req.body.text || "").trim();
+  session.reviewSubmittedAt = new Date();
+
+  await session.save();
+  const mentorUserId = session.mentorUserId;
+  const profile = await updateMentorReviewStats(mentorUserId);
+  await session.populate("mentorUserId", "username");
+  await session.populate("studentUserId", "username");
+
+  return res.status(200).json({
+    session: serializeSession(session.toObject()),
+    profile,
+    recentReviews: await getRecentMentorReviews(mentorUserId)
+  });
+}
+
 async function markCheckoutSessionPaid(checkoutSession) {
   const mentorSessionId = checkoutSession.metadata?.mentorSessionId;
   const query = mentorSessionId && mongoose.Types.ObjectId.isValid(mentorSessionId)
@@ -580,10 +688,13 @@ export async function getMentorProfileByUserId(req, res) {
   const profileObj = profile.toObject();
   if (!profileObj.bio) profileObj.bio = user.bio || "";
 
+  const recentReviews = await getRecentMentorReviews(user._id);
+
   return res.status(200).json({
     mentorUserId: user._id,
     username: user.username,
     userTags: user.tags,
-    profile: profileObj
+    profile: profileObj,
+    recentReviews
   });
 }

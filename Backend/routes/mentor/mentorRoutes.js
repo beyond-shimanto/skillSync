@@ -10,6 +10,7 @@ import {
   getMyMentorSessions,
   listMentorPackages,
   listMentors,
+  submitMentorSessionReview,
   updateMentorPackage,
   updateMentorSessionAttendance,
   upsertMentorProfile
@@ -25,6 +26,7 @@ mentorRouter.delete("/packages/:packageId", authenticate, deleteMentorPackage);
 mentorRouter.get("/sessions/me", authenticate, getMyMentorSessions);
 mentorRouter.post("/sessions/book", authenticate, bookMentorSession);
 mentorRouter.put("/sessions/:sessionId/attendance", authenticate, updateMentorSessionAttendance);
+mentorRouter.post("/sessions/:sessionId/review", authenticate, submitMentorSessionReview);
 mentorRouter.get("/profile/me", authenticate, getMyMentorProfile);
 mentorRouter.put("/profile/me", authenticate, upsertMentorProfile);
 mentorRouter.get("/:mentorUserId/packages", listMentorPackages);

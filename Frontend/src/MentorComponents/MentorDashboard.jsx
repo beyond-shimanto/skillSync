@@ -11,6 +11,7 @@ export function MentorDashboard({ username, onLogout }) {
     totalSessionsCompleted: 0,
     upcomingSessionsCount: 0,
     averageRating: 0,
+    reviewCount: 0,
     totalEarnings: 0
   });
   const [sessions, setSessions] = useState([]);
@@ -36,6 +37,7 @@ export function MentorDashboard({ username, onLogout }) {
         totalSessionsCompleted: 0,
         upcomingSessionsCount: 0,
         averageRating: 0,
+        reviewCount: 0,
         totalEarnings: 0
       };
 
@@ -43,12 +45,15 @@ export function MentorDashboard({ username, onLogout }) {
         const profileRes = await api.get("/mentors/profile/me");
         const profile = profileRes?.data?.profile;
         setMentorProfileData(profileRes?.data || null);
+        setRecentReviews(Array.isArray(profileRes?.data?.recentReviews) ? profileRes.data.recentReviews : []);
         nextStats = {
           ...nextStats,
-          averageRating: profile?.averageRating || 0
+          averageRating: profile?.averageRating || 0,
+          reviewCount: profile?.reviewCount || 0
         };
       } catch {
         nextStats.averageRating = 0;
+        nextStats.reviewCount = 0;
       }
 
       try {
@@ -82,12 +87,12 @@ export function MentorDashboard({ username, onLogout }) {
 
       try {
         const packagesRes = await api.get("/mentors/packages/me");
-        setPackages(Array.isArray(packagesRes.data) ? packagesRes.data : []);
+        const mentorPackages = Array.isArray(packagesRes.data) ? packagesRes.data : [];
+        setPackages(mentorPackages.filter((pkg) => pkg.isActive !== false));
       } catch {
         setPackages([]);
       }
 
-      setRecentReviews([]);
       setStats(nextStats);
     }
 
@@ -190,8 +195,8 @@ export function MentorDashboard({ username, onLogout }) {
     setPackageMessage("");
 
     try {
-      const res = await api.delete(`/mentors/packages/${packageId}`);
-      setPackages((prev) => prev.map((pkg) => (pkg._id === packageId ? res.data : pkg)));
+      await api.delete(`/mentors/packages/${packageId}`);
+      setPackages((prev) => prev.filter((pkg) => pkg._id !== packageId));
       if (editingPackageId === packageId) resetPackageForm();
       setPackageMessage("Package deleted.");
     } catch (err) {
@@ -206,9 +211,9 @@ export function MentorDashboard({ username, onLogout }) {
       { label: "My Packages", icon: "📦", action: () => setActiveSection("packages") },
       { label: "My Sessions", icon: "📅", action: () => setActiveSection("sessions") },
       { label: "Attendance Tracker", icon: "✅", action: () => setActiveSection("attendance") },
-      { label: "Earnings / Payments", icon: "💳", action: () => setActiveSection("dashboard") },
+      { label: "Earnings / Payments", icon: "💳", action: () => setActiveSection("earnings") },
       { label: "Messages", icon: "💬", action: () => navigate("/inbox") },
-      { label: "Reviews & Reports", icon: "⭐", action: () => setActiveSection("dashboard") }
+      { label: "Ratings & Reviews", icon: "⭐", action: () => setActiveSection("reviews") }
     ],
     [navigate]
   );
@@ -266,8 +271,12 @@ export function MentorDashboard({ username, onLogout }) {
             resetPackageForm={resetPackageForm}
             setPackageForm={setPackageForm}
           />
+        ) : activeSection === "earnings" ? (
+          <MentorEarningsView sessions={sessions} stats={stats} />
+        ) : activeSection === "reviews" ? (
+          <MentorReviewsView recentReviews={recentReviews} stats={stats} />
         ) : (
-          <DashboardSummary recentReviews={recentReviews} stats={stats} />
+          <DashboardSummary stats={stats} />
         )}
       </main>
     </div>
@@ -280,6 +289,8 @@ function getActiveSectionTitle(activeSection) {
   if (activeSection === "profile") return "My Profile";
   if (activeSection === "editProfile") return "Edit Profile";
   if (activeSection === "packages") return "My Packages";
+  if (activeSection === "earnings") return "Earnings / Payments";
+  if (activeSection === "reviews") return "Ratings & Reviews";
   return "Mentor Dashboard";
 }
 
@@ -486,36 +497,85 @@ const fieldLabelStyle = {
   fontWeight: 600
 };
 
-function DashboardSummary({ recentReviews, stats }) {
+function DashboardSummary({ stats }) {
+  return (
+    <section className="mentor-stat-grid">
+      <StatCard title="Total Sessions Completed" value={stats.totalSessionsCompleted} />
+      <StatCard title="Upcoming Sessions" value={stats.upcomingSessionsCount} />
+      <StatCard
+        title="Average Rating"
+        value={`${Number(stats.averageRating || 0).toFixed(1)} ${renderStars(stats.averageRating)}`}
+      />
+      <StatCard title="Total Earnings" value={`$${Number(stats.totalEarnings || 0).toFixed(2)}`} />
+    </section>
+  );
+}
+
+function MentorEarningsView({ sessions, stats }) {
+  const paidSessions = sessions.filter((session) => session.paymentStatus === "paid");
+  const unpaidSessions = sessions.filter((session) => session.paymentStatus !== "paid");
+  const currency = String(paidSessions[0]?.currencySnapshot || paidSessions[0]?.currency || "usd").toUpperCase();
+
   return (
     <>
       <section className="mentor-stat-grid">
-        <StatCard title="Total Sessions Completed" value={stats.totalSessionsCompleted} />
-        <StatCard title="Upcoming Sessions" value={stats.upcomingSessionsCount} />
-        <StatCard
-          title="Average Rating"
-          value={`${Number(stats.averageRating || 0).toFixed(1)} ${renderStars(stats.averageRating)}`}
-        />
         <StatCard title="Total Earnings" value={`$${Number(stats.totalEarnings || 0).toFixed(2)}`} />
+        <StatCard title="Paid Sessions" value={paidSessions.length} />
+        <StatCard title="Pending / Unpaid" value={unpaidSessions.length} />
+        <StatCard title="Currency" value={currency} />
       </section>
 
       <section className="mentor-panels">
         <div className="mentor-panel">
-          <h3>Session Overview</h3>
-          <p className="mentor-empty-text">Use My Sessions to manage booked sessions and attendance.</p>
+          <h3>Paid Sessions</h3>
+          {paidSessions.length === 0 ? (
+            <p className="mentor-empty-text">No paid sessions yet.</p>
+          ) : (
+            paidSessions.map((session) => (
+              <div key={session._id} className="mentor-row-card" style={{ alignItems: "stretch" }}>
+                <div>
+                  <p className="mentor-row-title">{session.studentName || "Student"}</p>
+                  <p>{session.packageTitleSnapshot || session.topic || "Mentor session"}</p>
+                  <p>{session.scheduledAt ? new Date(session.scheduledAt).toLocaleString() : "No scheduled time"}</p>
+                  <p>Payment: {session.paymentStatus}</p>
+                  <p>
+                    Amount: {((session.packagePriceCentsSnapshot || session.amountCents || 0) / 100).toFixed(2)}{" "}
+                    {String(session.currencySnapshot || session.currency || "usd").toUpperCase()}
+                  </p>
+                </div>
+              </div>
+            ))
+          )}
         </div>
+      </section>
+    </>
+  );
+}
 
+function MentorReviewsView({ recentReviews, stats }) {
+  return (
+    <>
+      <section className="mentor-stat-grid">
+        <StatCard
+          title="Average Rating"
+          value={`${Number(stats.averageRating || 0).toFixed(1)} ${renderStars(stats.averageRating)}`}
+        />
+        <StatCard title="Review Count" value={stats.reviewCount || 0} />
+      </section>
+
+      <section className="mentor-panels">
         <div className="mentor-panel">
           <h3>Recent Reviews</h3>
           {recentReviews.length === 0 ? (
             <p className="mentor-empty-text">No reviews yet.</p>
           ) : (
-            recentReviews.slice(0, 3).map((review) => (
+            recentReviews.map((review) => (
               <div key={review.id} className="mentor-row-card">
                 <div>
                   <p className="mentor-row-title">{review.learnerName}</p>
                   <p>{renderStars(review.rating)}</p>
-                  <p>{review.comment}</p>
+                  {review.packageTitle ? <p>{review.packageTitle}</p> : null}
+                  <p>{review.comment || "No written review."}</p>
                 </div>
               </div>
             ))
