@@ -5,17 +5,20 @@ import { apiContext } from "./ApiContext"
 import './Home.css'
 import { MentorDashboard } from "./MentorComponents/MentorDashboard"
 import accountLogo from "./accountcComponents/logo.png"
+import { AIChatbot } from "./aicomponent/AIChatbot"
 
 
 export function Home(){
 
-    const {isLoggedIn, username, handleLogout, userId} = useContext(authContext)
+    const {isLoggedIn, username, handleLogout, userId, isAuthLoading} = useContext(authContext)
     const {api} = useContext(apiContext )
     const navigate = useNavigate()
     const [ownGroups, setOwnGroups] = useState([])
     const [userType, setUserType] = useState('')
 
     useEffect(() => {
+        if (isAuthLoading || !isLoggedIn) return
+
         async function getOwnGroups(){
             try{
                 const res = await api.get('/study-groups/get-joined-study-groups')
@@ -39,7 +42,7 @@ export function Home(){
 
         getOwnGroups()
         getProfileInfo()
-    }, [])
+    }, [isAuthLoading, isLoggedIn])
 
 
     if(!isLoggedIn){
@@ -130,11 +133,11 @@ export function Home(){
                     <Link to='/portfolios'>View Portfolios</Link>
                     <Link to='/portfolios/my'>My Portfolios</Link>
                     <Link to='/jobs'>Job Tracker</Link>
-                    <Link to='/chatbot'>AI Chatbot</Link>
                     <Link to='/mentors'>Mentor Directory</Link>
                     {userType === 'mentor' && <Link to='/mentors/profile/edit'>Edit Mentor Profile</Link>}
                 </div>
              </div>
+             {isLoggedIn && <AIChatbot />}
         </div>
            
         </>

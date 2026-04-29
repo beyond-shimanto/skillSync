@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useContext } from "react";
 import axios from "axios";
 import { apiContext } from "../ApiContext";
+import aiLogo from "./ai_logo-removebg-preview.png";
 import "./AIChatbot.css";
 
 export function AIChatbot() {
@@ -8,6 +9,7 @@ export function AIChatbot() {
   const [inputValue, setInputValue] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [open, setOpen] = useState(false);
   const messagesEndRef = useRef(null);
   const { accessToken } = useContext(apiContext);
 
@@ -84,15 +86,39 @@ export function AIChatbot() {
   };
 
   return (
-    <div className="ai-chatbot-container">
-      <div className="ai-chatbot-header">
-        <h2>AI Chatbot Assistant</h2>
-        {messages.length > 0 && (
-          <button onClick={clearChat} className="clear-btn">
-            Clear Chat
-          </button>
-        )}
-      </div>
+    <>
+      {!open && (
+        <button className="ai-chat-launcher" onClick={() => setOpen(true)} aria-label="Open AI chat">
+          <img src={aiLogo} alt="AI logo" className="ai-chat-launcher-logo" />
+        </button>
+      )}
+
+      {open && (
+        <div className="ai-chat-floating-window">
+          <div className="ai-chatbot-container">
+            <div className="ai-chatbot-header">
+              <div className="ai-chatbot-logo-title">
+                <img src={aiLogo} alt="AI logo" className="ai-chatbot-logo" />
+                <div>
+                  <h2>AI Assistant</h2>
+                  <p className="ai-chatbot-tag">Tap to chat anytime</p>
+                </div>
+              </div>
+              <div className="ai-chatbot-header-actions">
+                {messages.length > 0 && (
+                  <button onClick={clearChat} className="clear-btn">
+                    Clear
+                  </button>
+                )}
+                <button
+                  onClick={() => setOpen(false)}
+                  className="ai-chat-close-btn"
+                  aria-label="Close chat"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
 
       <div className="ai-chatbot-messages">
         {messages.length === 0 && (
@@ -152,5 +178,8 @@ export function AIChatbot() {
         </button>
       </form>
     </div>
+  </div>
+      )}
+    </>
   );
 }

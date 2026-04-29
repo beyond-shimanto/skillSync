@@ -35,6 +35,8 @@ export function GroupView(){
     const [sessionDescriptionInput, setSessionDescriptionInput] = useState('')
     const [sessionScheduledAtInput, setSessionScheduledAtInput] = useState('')
 
+    const [members, setMembers] = useState([])
+
     const navigate = useNavigate()
 
     const [inviteUsernameInput, setInviteUsernameInput] = useState('')
@@ -101,6 +103,20 @@ export function GroupView(){
 
     useEffect(() => {
         getSessions()
+    }, [])
+
+    async function getMembers(){
+        try{
+            const res = await api.get(`/study-groups/${groupId}/get-members`)
+            setMembers(res.data)
+        }
+        catch(e){
+            setMessage('Something went wrong')
+        }
+    }
+
+    useEffect(() => {
+        getMembers()
     }, [])
 
     async function handleInviteClick(e){
@@ -229,6 +245,16 @@ export function GroupView(){
         }
     }
 
+    async function handleLeaveGroup(){
+        try{
+            await api.delete(`/study-groups/${groupId}/leave-group`)
+            setMessage('Left the group')
+            setTimeout(() => navigate('/study-groups'), 1000)
+        }catch(e){
+            setMessage('Something went wrong')
+        }
+    }
+
 
     if(!isMember){
         return(
@@ -278,6 +304,7 @@ export function GroupView(){
                     <div className={openTab == 'resources'? 'tab-selector selected': 'tab-selector'} onClick={() => setOpenTab('resources')}>Resources</div>
                     <div className={openTab == 'invitation'? 'tab-selector selected': 'tab-selector'} onClick={() => setOpenTab('invitation')}>Invite</div>
                     <div className={openTab == 'sessions'? 'tab-selector selected': 'tab-selector'} onClick={() => setOpenTab('sessions')}>Sessions</div>
+                    <div className={openTab == 'members'? 'tab-selector selected': 'tab-selector'} onClick={() => setOpenTab('members')}>Members</div>
                 </div>
 
 
@@ -376,6 +403,22 @@ export function GroupView(){
                             </div>
                         )
                     })}
+
+                </div>
+
+                
+                <div className="members-container" style={{display: openTab == 'members'? 'flex': 'none'}}>
+
+                    <h3>Members:</h3>
+                    {members.map(m => {
+                        return(
+                            <div key={m._id} className='card'>
+                                <h4>{m.userId.username}</h4>
+                                <p>Role: {m.role}</p>
+                            </div>
+                        )
+                    })}
+                    <button onClick={handleLeaveGroup}>Leave Group</button>
 
                 </div>
 
