@@ -556,6 +556,49 @@ studyGroupRouter.get('/:studyGroupId/get-sessions', authenticate, async (req, re
     }
 })
 
+// Get members of a group
+studyGroupRouter.get('/:studyGroupId/get-members', authenticate, async (req, res) => {
+    try {
+        const studyGroupId = req.params.studyGroupId
+        const userId = req.userObject.userId
+
+        if (!await isUserMemberOfStudyGroup(userId, studyGroupId)) {
+            res.status(400).json({ error: "User is not a member of this group" })
+            return
+        }
+
+        const memberships = await studyGroupMembershipModel.find({ studyGroupId: studyGroupId })
+            .populate('userId')
+            .sort({ role: -1 }) // admins first
+
+        res.status(200).json(memberships)
+
+    } catch (e) {
+        console.log(e)
+        res.status(500).json({ error: "Server error" })
+    }
+})
+
+// Leave a group
+studyGroupRouter.delete('/:studyGroupId/leave-group', authenticate, async (req, res) => {
+    try {
+        const studyGroupId = req.params.studyGroupId
+        const userId = req.userObject.userId
+
+        if (!await isUserMemberOfStudyGroup(userId, studyGroupId)) {
+            res.status(400).json({ error: "User is not a member of this group" })
+            return
+        }
+
+        await studyGroupMembershipModel.findOneAndDelete({ userId: userId, studyGroupId: studyGroupId })
+        res.status(200).json({ message: "Successfully left the group" })
+
+    } catch (e) {
+        console.log(e)
+        res.status(500).json({ error: "Server error" })
+    }
+})
+
 // Delete a session — only the creator can delete their own session
 studyGroupRouter.delete('/:studyGroupId/delete-session/:sessionId', authenticate, async (req, res) => {
     try {
