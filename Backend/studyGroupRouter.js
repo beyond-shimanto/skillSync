@@ -117,7 +117,7 @@ studyGroupRouter.post('/join-study-group', authenticate, async (req, res) => {
             return
         }
         
-        const newStudyGroupMembership = new studyGroupMembershipModel({userId: userId, studyGroupId: groupId})
+        const newStudyGroupMembership = new studyGroupMembershipModel({userId: userId, studyGroupId: groupId, role: 'general'})
         newStudyGroupMembership.save()
 
         res.status(200).json({message: "Successfully added to group"})
@@ -201,7 +201,7 @@ studyGroupRouter.post('/accept-invitation', authenticate, async (req, res) => {
             res.status(400).json({error: "This invitaiton is not meant for you!"})
             return
         }
-        const newStudyGroupMembership = new studyGroupMembershipModel({userId: req.userObject.userId, studyGroupId: invitationDocument.invitationGroupId})
+        const newStudyGroupMembership = new studyGroupMembershipModel({userId: req.userObject.userId, studyGroupId: invitationDocument.invitationGroupId, role: 'general'})
         newStudyGroupMembership.save()
         await studyGroupInvitationModel.findOneAndDelete({_id: invitationId})
         res.status(200).json({message: "Successfully accepted invite"})
@@ -585,13 +585,66 @@ studyGroupRouter.delete('/:studyGroupId/leave-group', authenticate, async (req, 
         const studyGroupId = req.params.studyGroupId
         const userId = req.userObject.userId
 
-        if (!await isUserMemberOfStudyGroup(userId, studyGroupId)) {
+        const membership = await studyGroupMembershipModel.findOne({ userId: userId, studyGroupId: studyGroupId })
+        if (!membership) {
             res.status(400).json({ error: "User is not a member of this group" })
             return
         }
 
-        await studyGroupMembershipModel.findOneAndDelete({ userId: userId, studyGroupId: studyGroupId })
-        res.status(200).json({ message: "Successfully left the group" })
+        // If the user is admin, disband the group
+        if (membership.role === 'admin') {
+            // Delete all memberships
+            await studyGroupMembershipModel.deleteMany({ studyGroupId: studyGroupId })
+            // Delete the group itself
+            await studyGroupModel.findOneAndDelete({ _id: studyGroupId })
+            res.status(200).json({ message: "Group disbanded successfully" })
+        } else {
+            // Regular member leaving
+            await studyGroupMembershipModel.findOneAndDelete({ userId: userId, studyGroupId: studyGroupId })
+            res.status(200).json({ message: "Successfully left the group" })
+        }
+
+    } catch (e) {
+        console.log(e)
+        res.status(500).json({ error: "Server error" })
+    }
+})
+
+// Kick a member from the group (admin only)
+studyGroupRouter.delete('/:studyGroupId/kick-member/:memberId', authenticate, async (req, res) => {
+    try {
+        const studyGroupId = req.params.studyGroupId
+        const memberId = req.params.memberId
+        const userId = req.userObject.userId
+
+        // Check if the requester is a member and admin
+        const requesterMembership = await studyGroupMembershipModel.findOne({ userId: userId, studyGroupId: studyGroupId })
+        if (!requesterMembership || requesterMembership.role !== 'admin') {
+            res.status(403).json({ error: "Only admins can kick members" })
+            return
+        }
+
+        // Check if the member to be kicked exists and is not an admin
+        const memberMembership = await studyGroupMembershipModel.findOne({ userId: memberId, studyGroupId: studyGroupId })
+        if (!memberMembership) {
+            res.status(400).json({ error: "Member not found in this group" })
+            return
+        }
+
+        if (memberMembership.role === 'admin') {
+            res.status(400).json({ error: "Cannot kick another admin" })
+            return
+        }
+
+        // Cannot kick yourself
+        if (memberId === userId) {
+            res.status(400).json({ error: "Cannot kick yourself" })
+            return
+        }
+
+        // Kick the member
+        await studyGroupMembershipModel.findOneAndDelete({ userId: memberId, studyGroupId: studyGroupId })
+        res.status(200).json({ message: "Member kicked successfully" })
 
     } catch (e) {
         console.log(e)
