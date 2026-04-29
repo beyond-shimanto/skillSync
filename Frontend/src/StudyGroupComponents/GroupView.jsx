@@ -43,6 +43,10 @@ export function GroupView(){
 
     const [openTab, setOpenTab] = useState('threads')
 
+    const [showKickConfirm, setShowKickConfirm] = useState(false)
+    const [memberToKick, setMemberToKick] = useState(null)
+    const [showLeaveConfirm, setShowLeaveConfirm] = useState(false)
+
     async function getGroupInfo(){
         try{
             const res = await api.get(`study-groups/${groupId}`)
@@ -246,10 +250,36 @@ export function GroupView(){
     }
 
     async function handleLeaveGroup(){
+        const userMembership = members.find(m => m.userId._id === userId)
+        if (userMembership && userMembership.role === 'admin') {
+            setShowLeaveConfirm(true)
+        } else {
+            await performLeaveGroup()
+        }
+    }
+
+    async function performLeaveGroup(){
         try{
             await api.delete(`/study-groups/${groupId}/leave-group`)
             setMessage('Left the group')
             setTimeout(() => navigate('/study-groups'), 1000)
+        }catch(e){
+            setMessage('Something went wrong')
+        }
+    }
+
+    async function handleKickMember(memberId){
+        setMemberToKick(memberId)
+        setShowKickConfirm(true)
+    }
+
+    async function performKickMember(){
+        try{
+            await api.delete(`/study-groups/${groupId}/kick-member/${memberToKick}`)
+            setMessage('Member kicked')
+            setShowKickConfirm(false)
+            setMemberToKick(null)
+            getMembers() // Refresh members list
         }catch(e){
             setMessage('Something went wrong')
         }
@@ -406,15 +436,28 @@ export function GroupView(){
 
                 </div>
 
-                
                 <div className="members-container" style={{display: openTab == 'members'? 'flex': 'none'}}>
 
                     <h3>Members:</h3>
                     {members.map(m => {
+                        const isCurrentUserAdmin = members.find(mem => mem.userId._id === userId)?.role === 'admin'
+                        const canKick = isCurrentUserAdmin && m.role === 'general' && m.userId._id !== userId
                         return(
                             <div key={m._id} className='card'>
-                                <h4>{m.userId.username}</h4>
-                                <p>Role: {m.role}</p>
+                                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                                    <div>
+                                        <h4>{m.userId.username}</h4>
+                                        <p>Role: {m.role}</p>
+                                    </div>
+                                    {canKick && (
+                                        <button 
+                                            onClick={() => handleKickMember(m.userId._id)}
+                                            style={{backgroundColor: '#ff4444', color: 'white', border: 'none', padding: '5px 10px', borderRadius: '3px', cursor: 'pointer'}}
+                                        >
+                                            Kick
+                                        </button>
+                                    )}
+                                </div>
                             </div>
                         )
                     })}
@@ -424,6 +467,89 @@ export function GroupView(){
 
                 
             </div>
+
+            {/* Kick Confirmation Dialog */}
+            {showKickConfirm && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.5)',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    zIndex: 1000
+                }}>
+                    <div style={{
+                        backgroundColor: 'white',
+                        padding: '20px',
+                        borderRadius: '8px',
+                        maxWidth: '400px',
+                        textAlign: 'center'
+                    }}>
+                        <h3 style={{color: 'black'}}>Confirm Kick</h3>
+                        <p style={{color: 'black'}}>Are you sure you want to kick this member from the group?</p>
+                        <div style={{display: 'flex', gap: '10px', justifyContent: 'center', marginTop: '20px'}}>
+                            <button 
+                                onClick={() => setShowKickConfirm(false)}
+                                style={{padding: '8px 16px', backgroundColor: '#0d0c0c'}}
+                            >
+                                No
+                            </button>
+                            <button 
+                                onClick={performKickMember}
+                                style={{padding: '8px 16px', backgroundColor: '#ff4444', color: 'white'}}
+                            >
+                                Yes, Kick
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Leave Group Confirmation Dialog for Admin */}
+            {showLeaveConfirm && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.5)',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    zIndex: 1000
+                }}>
+                    <div style={{
+                        backgroundColor: 'white',
+                        padding: '20px',
+                        borderRadius: '8px',
+                        maxWidth: '400px',
+                        textAlign: 'center'
+                    }}>
+                        <h3 style={{color: 'black'}}>Warning: Leaving as Admin</h3>
+                        <p style={{color: 'black'}}>As the admin, leaving this group will disband the entire group and remove all members. This action cannot be undone.</p>
+                        <p style={{color: 'black'}}>Are you sure you want to proceed?</p>
+                        <div style={{display: 'flex', gap: '10px', justifyContent: 'center', marginTop: '20px'}}>
+                            <button 
+                                onClick={() => setShowLeaveConfirm(false)}
+                                style={{padding: '8px 16px', backgroundColor: '#111111'}}
+                            >
+                                No
+                            </button>
+                            <button 
+                                onClick={performLeaveGroup}
+                                style={{padding: '8px 16px', backgroundColor: '#ff4444', color: 'white'}}
+                            >
+                                Yes, Disband Group
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
         </div>
         </>
