@@ -12,6 +12,7 @@ export function AIChatbot() {
   const [open, setOpen] = useState(false);
   const messagesEndRef = useRef(null);
   const { accessToken } = useContext(apiContext);
+  const { api } = useContext(apiContext);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -47,8 +48,8 @@ export function AIChatbot() {
         content: msg.content,
       }));
 
-      const response = await axios.post(
-        "http://localhost:5000/ai/chat",
+      const response = await api.post(
+        "ai/chat",
         { messages: messagesForAI },
         {
           headers: {
