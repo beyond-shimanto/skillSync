@@ -19,11 +19,12 @@ import { UploadPortfolio } from './PortfolioComponents/UploadPortfolio'
 import { MyPortfolios } from './PortfolioComponents/MyPortfolios'
 
 import {AIChatbot} from './aicomponent/AIChatbot'
+import { RoadmapGenerator } from './aicomponent/RoadmapGenerator'
 import { MentorDirectory } from './MentorComponents/MentorDirectory'
 import { MentorProfileView } from './MentorComponents/MentorProfileView'
 import { MentorProfileEditor } from './MentorComponents/MentorProfileEditor'
 
-import  JobTracker from "./JobTracker";
+import JobTracker from "./JobTracker";
 import { AccountPage } from './accountcComponents/AccountPage';
 import { DirectMessageView } from './DirectMessageComponents/DirectMessageView';
 import { InboxView } from './DirectMessageComponents/InboxView';
@@ -54,6 +55,7 @@ function App() {
         <Route path="/account" element={<ProtectedRoute><AccountPage /></ProtectedRoute>} />
         <Route path="/direct-messages/:conversationId" element={<ProtectedRoute><DirectMessageView /></ProtectedRoute>} />
         <Route path="/inbox" element={<ProtectedRoute><InboxView /></ProtectedRoute>} />
+        <Route path="/roadmap" element={<ProtectedRoute><RoadmapGenerator /></ProtectedRoute>} />
       </Routes>
     </>
   )
