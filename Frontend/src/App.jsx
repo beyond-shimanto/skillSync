@@ -28,6 +28,7 @@ import JobTracker from "./JobTracker";
 import { AccountPage } from './accountcComponents/AccountPage';
 import { DirectMessageView } from './DirectMessageComponents/DirectMessageView';
 import { InboxView } from './DirectMessageComponents/InboxView';
+import { BookmarksPage } from './BookmarkComponents/BookmarksPage';
 
 
 function App() {
@@ -56,6 +57,7 @@ function App() {
         <Route path="/direct-messages/:conversationId" element={<ProtectedRoute><DirectMessageView /></ProtectedRoute>} />
         <Route path="/inbox" element={<ProtectedRoute><InboxView /></ProtectedRoute>} />
         <Route path="/roadmap" element={<ProtectedRoute><RoadmapGenerator /></ProtectedRoute>} />
+        <Route path="/bookmarks" element={<ProtectedRoute><BookmarksPage /></ProtectedRoute>} />
       </Routes>
     </>
   )

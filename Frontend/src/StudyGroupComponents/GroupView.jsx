@@ -8,7 +8,6 @@ import './GroupView.css'
 
 export function GroupView(){
 
-
     const {api} = useContext(apiContext)
     const {handleLogout, username, userId} = useContext(authContext)
     const {groupId} = useParams()
@@ -27,8 +26,9 @@ export function GroupView(){
     const resourcesFileInputElemRef = useRef(null)
 
     const [threads, setThreads] = useState([])
-
     const [resources, setResources] = useState([])
+
+    const [resourceBookmarks, setResourceBookmarks] = useState({})
 
     const [sessions, setSessions] = useState([])
     const [sessionTitleInput, setSessionTitleInput] = useState('')
@@ -36,13 +36,9 @@ export function GroupView(){
     const [sessionScheduledAtInput, setSessionScheduledAtInput] = useState('')
 
     const [members, setMembers] = useState([])
-
     const navigate = useNavigate()
-
     const [inviteUsernameInput, setInviteUsernameInput] = useState('')
-
     const [openTab, setOpenTab] = useState('threads')
-
     const [showKickConfirm, setShowKickConfirm] = useState(false)
     const [memberToKick, setMemberToKick] = useState(null)
     const [showLeaveConfirm, setShowLeaveConfirm] = useState(false)
@@ -53,18 +49,13 @@ export function GroupView(){
             setGroupInfo(res.data)
             setTags(res.data.tags)
         }catch(e){
-            
             setMessage('Something went wrong')
         }
     }
 
     useEffect(() => {
-        
-
         getGroupInfo()
     }, [])
-
-
 
     async function getThreads(){
         try{
@@ -84,7 +75,6 @@ export function GroupView(){
         try{
             const res = await api.get(`/study-groups/${groupId}/get-resources`)
             setResources(res.data)
-
         }
         catch(e){
             setMessage('Something went wrong')
@@ -94,6 +84,53 @@ export function GroupView(){
     useEffect(() => {
         getResources()
     }, [])
+
+    useEffect(() => {
+        if (resources.length === 0) return
+        async function loadResourceBookmarks() {
+            const results = {}
+            await Promise.all(
+                resources.map(async (r) => {
+                    try {
+                        const res = await api.get(`api/bookmarks/check/resource/${r._id}`)
+                        results[r._id] = {
+                            bookmarked: res.data.bookmarked,
+                            bookmarkId: res.data.bookmarkId
+                        }
+                    } catch {
+                        results[r._id] = { bookmarked: false, bookmarkId: null }
+                    }
+                })
+            )
+            setResourceBookmarks(results)
+        }
+        loadResourceBookmarks()
+    }, [resources])
+
+    async function handleResourceBookmark(resource) {
+        const current = resourceBookmarks[resource._id] || { bookmarked: false, bookmarkId: null }
+        try {
+            if (current.bookmarked) {
+                await api.delete(`api/bookmarks/${current.bookmarkId}`)
+                setResourceBookmarks(prev => ({
+                    ...prev,
+                    [resource._id]: { bookmarked: false, bookmarkId: null }
+                }))
+            } else {
+                const res = await api.post('api/bookmarks/resource', {
+                    resourceId: resource._id,
+                    resourceTitle: resource.title,
+                    resourceGroupId: groupId
+                })
+                setResourceBookmarks(prev => ({
+                    ...prev,
+                    [resource._id]: { bookmarked: true, bookmarkId: res.data.bookmark._id }
+                }))
+            }
+        } catch (err) {
+            console.error('Bookmark error:', err)
+        }
+    }
 
     async function getSessions(){
         try{
@@ -128,17 +165,11 @@ export function GroupView(){
         try {
             await api.post('/study-groups/create-invitation', {inviteeUsername: inviteUsernameInput, invitationGroupId: groupId})
             setMessage('Successfully invited')
-            setTimeout(() => {
-                setMessage('')
-            }, 3000)
+            setTimeout(() => setMessage(''), 3000)
         }catch(e){
             setMessage('Could not invite')
-            setTimeout(() => {
-                setMessage('')
-            }, 3000)
+            setTimeout(() => setMessage(''), 3000)
         }
-
-        
     }
 
     function handleJoin(){
@@ -148,8 +179,6 @@ export function GroupView(){
         }catch(e){
             setMessage('Something went wrong')
         }
-        
-        
     }
 
     async function handleThreadSubmit(e){
@@ -163,17 +192,15 @@ export function GroupView(){
             return
         }
         try{
-            await api.post(`/study-groups/${groupId}/create-thread`, {title: threadTitleInput, description: threadDescriptionInput, studyGroupId: groupId, })
+            await api.post(`/study-groups/${groupId}/create-thread`, {title: threadTitleInput, description: threadDescriptionInput, studyGroupId: groupId})
             setMessage('Created Thread')
         }catch(e){
             setMessage('Something is wrong')
         }
-        
     }
 
     function handleClearFileSelection(e){
         setResourcesFileInput(undefined)
-
         if (resourcesFileInputElemRef.current){
             resourcesFileInputElemRef.current.value = ""
         }
@@ -186,25 +213,19 @@ export function GroupView(){
         }
         e.preventDefault()
         const formData = new FormData()
-        formData.append('title',resourcesTitleInput)
+        formData.append('title', resourcesTitleInput)
         formData.append('description', resourcesDescriptionInput)
         formData.append('link', resourcesLinkInput)
         if(resourcesFileInput){
             formData.append('file', resourcesFileInput)
         }
-
         try{
             await api.postFormData(`study-groups/${groupId}/create-resource`, formData)
-
-            setTimeout(() => {
-                navigate(0)
-            }, 800)
-            
+            setTimeout(() => navigate(0), 800)
         }
         catch(e){
             setMessage('Something went wrong')
         }
-
     }
 
     async function handleDownloadResource(resource_id){
@@ -279,12 +300,11 @@ export function GroupView(){
             setMessage('Member kicked')
             setShowKickConfirm(false)
             setMemberToKick(null)
-            getMembers() // Refresh members list
+            getMembers()
         }catch(e){
             setMessage('Something went wrong')
         }
     }
-
 
     if(!isMember){
         return(
@@ -293,15 +313,11 @@ export function GroupView(){
                     <h3>You are not a part of this group!</h3>
                     <button onClick={handleJoin}>Join</button>
                 </div>
-                
             </>
         )
     }
 
-
-
     return(
-        
         <>
         <div className="group-view">
 
@@ -309,7 +325,6 @@ export function GroupView(){
                 <div className="logo">
                     <h2 onClick={() => navigate('/')} >SkillSync</h2>
                 </div>
-            
                 <button onClick={handleLogout}>Logout</button>
             </div>
 
@@ -319,17 +334,14 @@ export function GroupView(){
                 <p>{groupInfo.description}</p>
 
                 <div className="tag-pills-container">
-                    {tags.map(t => {
-                        return (
-                            <div className="tag-pill">{t}</div>
-                        )
-                    })}
+                    {tags.map(t => (
+                        <div className="tag-pill" key={t}>{t}</div>
+                    ))}
                 </div>
-                
+
                 <Link to={`/study-groups/view-chat/${groupId}`}><p>View chat</p></Link>
-                
+
                 <div className="tab-selectors-container">
-                    
                     <div className={openTab == 'threads'? 'tab-selector selected': 'tab-selector'} onClick={() => setOpenTab('threads')}>Threads</div>
                     <div className={openTab == 'resources'? 'tab-selector selected': 'tab-selector'} onClick={() => setOpenTab('resources')}>Resources</div>
                     <div className={openTab == 'invitation'? 'tab-selector selected': 'tab-selector'} onClick={() => setOpenTab('invitation')}>Invite</div>
@@ -337,19 +349,15 @@ export function GroupView(){
                     <div className={openTab == 'members'? 'tab-selector selected': 'tab-selector'} onClick={() => setOpenTab('members')}>Members</div>
                 </div>
 
-
                 <div className="invitation-container" style={{display: openTab == 'invitation'? 'flex': 'none'}}>
-
                     <p>Invite a user(put username): </p>
                     <input onChange={(e) => setInviteUsernameInput(e.target.value)} value={inviteUsernameInput}></input>
                     <a onClick={handleInviteClick}>Invite</a>
-
                 </div>
 
-                
                 <div className="threads-container" style={{display: openTab == 'threads'? 'flex': 'none'}}>
                     <h4>Create a new thread!</h4>
-                    <p>Ttile: </p>
+                    <p>Title: </p>
                     <input onChange={(e) => setThreadTitleInput(e.target.value)} value={threadTitleInput}></input>
                     <p>Description: </p>
                     <input onChange={(e) => setThreadDescriptionInput(e.target.value)} value={threadDescriptionInput}></input>
@@ -357,26 +365,19 @@ export function GroupView(){
                     <button onClick={handleThreadSubmit}>Submit</button>
 
                     {threads.length > 0 && <h3>Threads: </h3>}
-                    {threads.map(t => {
-                        return(
-                            <div key={t._id} className='card'>
-                                <h4>{t.title}</h4>
-                                <p>Made by: {t.authorId.username}</p>
-                                <p>{t.description}</p>
-                                <div className="view-button" onClick={() => navigate(`/study-groups/view-thread/${groupId}/${t._id}`)}>
-                                    <ArrowSvg></ArrowSvg>
-                                </div>
+                    {threads.map(t => (
+                        <div key={t._id} className='card'>
+                            <h4>{t.title}</h4>
+                            <p>Made by: {t.authorId.username}</p>
+                            <p>{t.description}</p>
+                            <div className="view-button" onClick={() => navigate(`/study-groups/view-thread/${groupId}/${t._id}`)}>
+                                <ArrowSvg></ArrowSvg>
                             </div>
-                            
-
-                        )
-                    })}
+                        </div>
+                    ))}
                 </div>
-                
 
-                <div className="resources-container" style={{display: openTab == 'resources'? 'flex': 'none'}} >
-
-
+                <div className="resources-container" style={{display: openTab == 'resources'? 'flex': 'none'}}>
                     <h3>Create a resource</h3>
                     <p>Title: </p>
                     <input onChange={(e) => setResourcesTitleInput(e.target.value)} value={resourcesTitleInput}></input>
@@ -386,29 +387,49 @@ export function GroupView(){
                     <input onChange={(e) => setResourcesLinkInput(e.target.value)} value={resourcesLinkInput}></input>
                     <p>File:</p>
                     <div className="file-input-container">
-                        <input onChange={(e) => setResourcesFileInput(e.target.files[0])} type='file' ref={resourcesFileInputElemRef} ></input>
-                        <a onClick={ (e) =>  handleClearFileSelection(e)} >Remove file</a>
+                        <input onChange={(e) => setResourcesFileInput(e.target.files[0])} type='file' ref={resourcesFileInputElemRef}></input>
+                        <a onClick={(e) => handleClearFileSelection(e)}>Remove file</a>
                     </div>
-                    
-                    
-                    <button onClick={handleResourcesSubmit} >Submit</button>
+                    <button onClick={handleResourcesSubmit}>Submit</button>
+
                     <h3>Resources:</h3>
                     {resources.map(m => {
+                        const bmState = resourceBookmarks[m._id] || { bookmarked: false, bookmarkId: null }
                         return(
-                            <div key={m._id} className='card' >
+                            <div key={m._id} className='card'>
                                 <h4>{m.title}</h4>
                                 <p>{m.description}</p>
                                 {m.link && <a href={m.link}>{m.link}</a>}
                                 <p>by: {m.uploaderId.username}</p>
-                                {m.isFileAvailable && <div className='view-button' onClick={(e) => handleDownloadResource(m._id)}><ArrowSvg></ArrowSvg></div>}
-                                {m.isFileAvailable && <p>File download is availabe</p>}
+                                {m.isFileAvailable && (
+                                    <div className='view-button' onClick={() => handleDownloadResource(m._id)}>
+                                        <ArrowSvg></ArrowSvg>
+                                    </div>
+                                )}
+                                {m.isFileAvailable && <p>File download is available</p>}
+
+                                {/* NEW: bookmark button */}
+                                <button
+                                    onClick={() => handleResourceBookmark(m)}
+                                    style={{
+                                        marginTop: '8px',
+                                        padding: '4px 12px',
+                                        background: bmState.bookmarked ? '#444' : '#667eea',
+                                        color: bmState.bookmarked ? '#ccc' : 'white',
+                                        border: 'none',
+                                        borderRadius: '6px',
+                                        cursor: 'pointer',
+                                        fontSize: '12px'
+                                    }}
+                                >
+                                    {bmState.bookmarked ? '★ Bookmarked' : '☆ Bookmark'}
+                                </button>
                             </div>
                         )
                     })}
-
                 </div>
-                <div className="sessions-container" style={{display: openTab == 'sessions'? 'flex': 'none'}}>
 
+                <div className="sessions-container" style={{display: openTab == 'sessions'? 'flex': 'none'}}>
                     <h4>Create a new session!</h4>
                     <p>Title: </p>
                     <input onChange={(e) => setSessionTitleInput(e.target.value)} value={sessionTitleInput}></input>
@@ -420,24 +441,20 @@ export function GroupView(){
                     <button onClick={handleSessionSubmit}>Submit</button>
 
                     {sessions.length > 0 && <h3>Upcoming Sessions: </h3>}
-                    {sessions.map(s => {
-                        return(
-                            <div key={s._id} className='card'>
-                                <h4>{s.title}</h4>
-                                <p>{s.description}</p>
-                                <p>Scheduled at: {new Date(s.scheduledAt).toLocaleString()}</p>
-                                <p>Created by: {s.createdBy.username}</p>
-                                {s.createdBy._id === userId && 
-                                    <button onClick={() => handleSessionDelete(s._id)}>Delete</button>
-                                }
-                            </div>
-                        )
-                    })}
-
+                    {sessions.map(s => (
+                        <div key={s._id} className='card'>
+                            <h4>{s.title}</h4>
+                            <p>{s.description}</p>
+                            <p>Scheduled at: {new Date(s.scheduledAt).toLocaleString()}</p>
+                            <p>Created by: {s.createdBy.username}</p>
+                            {s.createdBy._id === userId &&
+                                <button onClick={() => handleSessionDelete(s._id)}>Delete</button>
+                            }
+                        </div>
+                    ))}
                 </div>
 
                 <div className="members-container" style={{display: openTab == 'members'? 'flex': 'none'}}>
-
                     <h3>Members:</h3>
                     {members.map(m => {
                         const isCurrentUserAdmin = members.find(mem => mem.userId._id === userId)?.role === 'admin'
@@ -450,7 +467,7 @@ export function GroupView(){
                                         <p>Role: {m.role}</p>
                                     </div>
                                     {canKick && (
-                                        <button 
+                                        <button
                                             onClick={() => handleKickMember(m.userId._id)}
                                             style={{backgroundColor: '#ff4444', color: 'white', border: 'none', padding: '5px 10px', borderRadius: '3px', cursor: 'pointer'}}
                                         >
@@ -462,48 +479,18 @@ export function GroupView(){
                         )
                     })}
                     <button onClick={handleLeaveGroup}>Leave Group</button>
-
                 </div>
-
-                
             </div>
 
             {/* Kick Confirmation Dialog */}
             {showKickConfirm && (
-                <div style={{
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    backgroundColor: 'rgba(0,0,0,0.5)',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    zIndex: 1000
-                }}>
-                    <div style={{
-                        backgroundColor: 'white',
-                        padding: '20px',
-                        borderRadius: '8px',
-                        maxWidth: '400px',
-                        textAlign: 'center'
-                    }}>
+                <div style={{position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000}}>
+                    <div style={{backgroundColor: 'white', padding: '20px', borderRadius: '8px', maxWidth: '400px', textAlign: 'center'}}>
                         <h3 style={{color: 'black'}}>Confirm Kick</h3>
                         <p style={{color: 'black'}}>Are you sure you want to kick this member from the group?</p>
                         <div style={{display: 'flex', gap: '10px', justifyContent: 'center', marginTop: '20px'}}>
-                            <button 
-                                onClick={() => setShowKickConfirm(false)}
-                                style={{padding: '8px 16px', backgroundColor: '#0d0c0c'}}
-                            >
-                                No
-                            </button>
-                            <button 
-                                onClick={performKickMember}
-                                style={{padding: '8px 16px', backgroundColor: '#ff4444', color: 'white'}}
-                            >
-                                Yes, Kick
-                            </button>
+                            <button onClick={() => setShowKickConfirm(false)} style={{padding: '8px 16px', backgroundColor: '#0d0c0c'}}>No</button>
+                            <button onClick={performKickMember} style={{padding: '8px 16px', backgroundColor: '#ff4444', color: 'white'}}>Yes, Kick</button>
                         </div>
                     </div>
                 </div>
@@ -511,41 +498,14 @@ export function GroupView(){
 
             {/* Leave Group Confirmation Dialog for Admin */}
             {showLeaveConfirm && (
-                <div style={{
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    backgroundColor: 'rgba(0,0,0,0.5)',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    zIndex: 1000
-                }}>
-                    <div style={{
-                        backgroundColor: 'white',
-                        padding: '20px',
-                        borderRadius: '8px',
-                        maxWidth: '400px',
-                        textAlign: 'center'
-                    }}>
+                <div style={{position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000}}>
+                    <div style={{backgroundColor: 'white', padding: '20px', borderRadius: '8px', maxWidth: '400px', textAlign: 'center'}}>
                         <h3 style={{color: 'black'}}>Warning: Leaving as Admin</h3>
                         <p style={{color: 'black'}}>As the admin, leaving this group will disband the entire group and remove all members. This action cannot be undone.</p>
                         <p style={{color: 'black'}}>Are you sure you want to proceed?</p>
                         <div style={{display: 'flex', gap: '10px', justifyContent: 'center', marginTop: '20px'}}>
-                            <button 
-                                onClick={() => setShowLeaveConfirm(false)}
-                                style={{padding: '8px 16px', backgroundColor: '#111111'}}
-                            >
-                                No
-                            </button>
-                            <button 
-                                onClick={performLeaveGroup}
-                                style={{padding: '8px 16px', backgroundColor: '#ff4444', color: 'white'}}
-                            >
-                                Yes, Disband Group
-                            </button>
+                            <button onClick={() => setShowLeaveConfirm(false)} style={{padding: '8px 16px', backgroundColor: '#111111'}}>No</button>
+                            <button onClick={performLeaveGroup} style={{padding: '8px 16px', backgroundColor: '#ff4444', color: 'white'}}>Yes, Disband Group</button>
                         </div>
                     </div>
                 </div>
@@ -553,23 +513,13 @@ export function GroupView(){
 
         </div>
         </>
-        
-    ) 
+    )
 }
 
 const ArrowSvg = (props) => (
-  <svg
-    viewBox="0 0 24 24"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-    {...props}
-  >
+  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
     <g id="SVGRepo_bgCarrier" strokeWidth={0} />
-    <g
-      id="SVGRepo_tracerCarrier"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
+    <g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round" />
     <g id="SVGRepo_iconCarrier">
       <path
         d="M11 16L15 12M15 12L11 8M15 12H3M4.51555 17C6.13007 19.412 8.87958 21 12 21C16.9706 21 21 16.9706 21 12C21 7.02944 16.9706 3 12 3C8.87958 3 6.13007 4.58803 4.51555 7"
@@ -580,4 +530,4 @@ const ArrowSvg = (props) => (
       />
     </g>
   </svg>
-);
+)

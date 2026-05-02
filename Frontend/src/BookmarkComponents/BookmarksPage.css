@@ -1,0 +1,143 @@
+.bookmarks-page {
+  padding: 24px;
+  color: white;
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.bookmarks-header {
+  margin-bottom: 24px;
+}
+
+.bookmarks-header h2 {
+  font-size: 24px;
+  margin: 0 0 6px;
+}
+
+.bookmarks-header p {
+  color: #aaa;
+  font-size: 14px;
+  margin: 0;
+}
+
+.bookmarks-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.bookmarks-tab {
+  padding: 8px 18px;
+  border-radius: 20px;
+  border: 1px solid #444;
+  background: #1e1e1e;
+  color: #ccc;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.15s;
+}
+
+.bookmarks-tab.active {
+  background: #00bcd4;
+  color: #000;
+  border-color: #00bcd4;
+  font-weight: 600;
+}
+
+.bookmarks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bookmark-card {
+  background: #1e1e1e;
+  border: 1px solid #333;
+  border-radius: 12px;
+  padding: 16px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.bookmark-card-info h4 {
+  margin: 0 0 4px;
+  font-size: 16px;
+  color: white;
+}
+
+.bookmark-card-info p {
+  margin: 0;
+  font-size: 13px;
+  color: #888;
+}
+
+.bookmark-type-badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 600;
+  margin-left: 8px;
+}
+
+.bookmark-type-mentor {
+  background: rgba(0, 188, 212, 0.15);
+  color: #00bcd4;
+}
+
+.bookmark-type-resource {
+  background: rgba(103, 126, 234, 0.15);
+  color: #667eea;
+}
+
+.bookmark-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.bookmark-view-btn {
+  padding: 6px 14px;
+  background: #2c2c2c;
+  border: 1px solid #444;
+  color: #ccc;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+
+.bookmark-view-btn:hover {
+  background: #383838;
+}
+
+.bookmark-remove-btn {
+  padding: 6px 14px;
+  background: transparent;
+  border: 1px solid #555;
+  color: #ff6b6b;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.15s;
+}
+
+.bookmark-remove-btn:hover {
+  background: rgba(255, 107, 107, 0.1);
+}
+
+.bookmarks-empty {
+  text-align: center;
+  color: #666;
+  padding: 40px 0;
+  font-size: 14px;
+}
+
+.bookmarks-loading {
+  text-align: center;
+  color: #aaa;
+  padding: 40px 0;
+}
