@@ -358,4 +358,47 @@ const skillSchema = new mongoose.Schema({
 });
 
 const Skill = mongoose.model('Skill', skillSchema);
-export { Skill }
+
+const bookmarkSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  type: {
+    type: String,
+    enum: ['mentor', 'resource'],
+    required: true
+  },
+  // Used when type is 'mentor'
+  mentorUserId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null
+  },
+  mentorUsername: {
+    type: String,
+    default: ''
+  },
+  // Used when type is 'resource'
+  resourceId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'StudyGroupResource',
+    default: null
+  },
+  resourceTitle: {
+    type: String,
+    default: ''
+  },
+  resourceGroupId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'StudyGroup',
+    default: null
+  }
+}, { timestamps: true })
+
+bookmarkSchema.index({ userId: 1, type: 1 })
+
+const bookmarkModel = mongoose.model('Bookmark', bookmarkSchema)
+
+export { Skill, bookmarkModel }
