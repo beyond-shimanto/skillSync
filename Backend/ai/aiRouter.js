@@ -1,5 +1,7 @@
 import express from "express";
-import { generateAIResponse } from "./aiService.js";
+import { generateAIResponse, generateRoadmap } from "./aiService.js";
+import { authenticate } from "../server.js";
+import { userModel } from "../models.js";
 
 export const aiRouter = express.Router();
 
@@ -30,6 +32,47 @@ aiRouter.post("/chat", async (req, res) => {
     }
   } catch (error) {
     console.error("Error in AI chat route:", error);
+    return res.status(500).json({
+      success: false,
+      error: "Internal server error",
+    });
+  }
+});
+
+// POST endpoint to generate a learning roadmap
+aiRouter.post("/roadmap", authenticate, async (req, res) => {
+  try {
+    const { targetRole } = req.body;
+
+    if (!targetRole || !targetRole.trim()) {
+      return res.status(400).json({
+        success: false,
+        error: "targetRole is required",
+      });
+    }
+
+    // Fetching user's existing skills to personalize
+    const user = await userModel
+      .findById(req.userObject.userId)
+      .populate("skillsWanted");
+
+    const skills = user?.skillsWanted?.map(s => s.name) ?? [];
+
+    const result = await generateRoadmap(targetRole.trim(), skills);
+
+    if (result.success) {
+      return res.status(200).json({
+        success: true,
+        roadmap: result.roadmap,
+      });
+    } else {
+      return res.status(500).json({
+        success: false,
+        error: result.error,
+      });
+    }
+  } catch (error) {
+    console.error("Error in roadmap route:", error);
     return res.status(500).json({
       success: false,
       error: "Internal server error",
