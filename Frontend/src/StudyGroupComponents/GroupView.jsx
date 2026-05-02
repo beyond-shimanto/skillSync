@@ -27,13 +27,14 @@ export function GroupView(){
 
     const [threads, setThreads] = useState([])
     const [resources, setResources] = useState([])
-
     const [resourceBookmarks, setResourceBookmarks] = useState({})
 
     const [sessions, setSessions] = useState([])
     const [sessionTitleInput, setSessionTitleInput] = useState('')
     const [sessionDescriptionInput, setSessionDescriptionInput] = useState('')
     const [sessionScheduledAtInput, setSessionScheduledAtInput] = useState('')
+
+    const [sessionAttendance, setSessionAttendance] = useState({})
 
     const [members, setMembers] = useState([])
     const navigate = useNavigate()
@@ -145,6 +146,37 @@ export function GroupView(){
     useEffect(() => {
         getSessions()
     }, [])
+
+    useEffect(() => {
+        if (sessions.length === 0) return
+        async function loadAttendance() {
+            const results = {}
+            await Promise.all(
+                sessions.map(async (s) => {
+                    try {
+                        const res = await api.get(`study-groups/${groupId}/attendance/${s._id}`)
+                        results[s._id] = res.data.checkedIn
+                    } catch {
+                        results[s._id] = false
+                    }
+                })
+            )
+            setSessionAttendance(results)
+        }
+        loadAttendance()
+    }, [sessions])
+
+    async function handleCheckIn(sessionId) {
+        try {
+            await api.post(`study-groups/${groupId}/check-in/${sessionId}`, {})
+            setSessionAttendance(prev => ({ ...prev, [sessionId]: true }))
+            setMessage('Checked in successfully!')
+            setTimeout(() => setMessage(''), 3000)
+        } catch (err) {
+            setMessage('Could not check in. You may have already checked in.')
+            setTimeout(() => setMessage(''), 3000)
+        }
+    }
 
     async function getMembers(){
         try{
@@ -407,8 +439,6 @@ export function GroupView(){
                                     </div>
                                 )}
                                 {m.isFileAvailable && <p>File download is available</p>}
-
-                                {/* NEW: bookmark button */}
                                 <button
                                     onClick={() => handleResourceBookmark(m)}
                                     style={{
@@ -440,18 +470,48 @@ export function GroupView(){
                     <br></br>
                     <button onClick={handleSessionSubmit}>Submit</button>
 
-                    {sessions.length > 0 && <h3>Upcoming Sessions: </h3>}
-                    {sessions.map(s => (
-                        <div key={s._id} className='card'>
-                            <h4>{s.title}</h4>
-                            <p>{s.description}</p>
-                            <p>Scheduled at: {new Date(s.scheduledAt).toLocaleString()}</p>
-                            <p>Created by: {s.createdBy.username}</p>
-                            {s.createdBy._id === userId &&
-                                <button onClick={() => handleSessionDelete(s._id)}>Delete</button>
-                            }
-                        </div>
-                    ))}
+                    {sessions.length > 0 && <h3>Sessions: </h3>}
+                    {sessions.map(s => {
+                        const isPast = new Date(s.scheduledAt) <= new Date()
+                        const alreadyCheckedIn = sessionAttendance[s._id]
+                        return (
+                            <div key={s._id} className='card'>
+                                <h4>{s.title}</h4>
+                                <p>{s.description}</p>
+                                <p>Scheduled at: {new Date(s.scheduledAt).toLocaleString()}</p>
+                                <p>Created by: {s.createdBy.username}</p>
+
+                                {isPast && (
+                                    <button
+                                        onClick={() => handleCheckIn(s._id)}
+                                        disabled={alreadyCheckedIn}
+                                        style={{
+                                            marginTop: '8px',
+                                            padding: '6px 14px',
+                                            background: alreadyCheckedIn ? '#444' : '#00bcd4',
+                                            color: alreadyCheckedIn ? '#aaa' : '#000',
+                                            border: 'none',
+                                            borderRadius: '6px',
+                                            cursor: alreadyCheckedIn ? 'not-allowed' : 'pointer',
+                                            fontSize: '13px',
+                                            fontWeight: 600
+                                        }}
+                                    >
+                                        {alreadyCheckedIn ? '✓ Attended' : 'Check In'}
+                                    </button>
+                                )}
+
+                                {s.createdBy._id === userId &&
+                                    <button
+                                        onClick={() => handleSessionDelete(s._id)}
+                                        style={{ marginTop: '8px', marginLeft: '8px' }}
+                                    >
+                                        Delete
+                                    </button>
+                                }
+                            </div>
+                        )
+                    })}
                 </div>
 
                 <div className="members-container" style={{display: openTab == 'members'? 'flex': 'none'}}>

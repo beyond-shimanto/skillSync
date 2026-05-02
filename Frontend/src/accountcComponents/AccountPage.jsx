@@ -20,6 +20,7 @@ export function AccountPage() {
   const [uploadingPic, setUploadingPic] = useState(false);
   const [error, setError] = useState("");
   const [skillsWanted, setSkillsWanted] = useState([]);
+  const [streak, setStreak] = useState(null);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -32,6 +33,13 @@ export function AccountPage() {
 
         const existingSkills = res.data.skillsWanted ?? [];
         setSkillsWanted(existingSkills.map(s => s._id || s));
+
+        try {
+          const streakRes = await api.get("api/streak");
+          setStreak(streakRes.data);
+        } catch {
+          setStreak(null);
+        }
 
       } catch (e) {
         setError("Failed to load profile.");
@@ -212,6 +220,55 @@ export function AccountPage() {
             </div>
           )}
         </div>
+
+        {!editing && streak !== null && (
+          <div className="account-section">
+            <div className="account-section-header">
+              <h4>Learning Streak</h4>
+            </div>
+            <div style={{ display: "flex", gap: "24px", flexWrap: "wrap", alignItems: "center" }}>
+              <div style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                background: "#1e1e1e",
+                border: "1px solid #333",
+                borderRadius: "12px",
+                padding: "16px 24px",
+                minWidth: "100px"
+              }}>
+                <span style={{ fontSize: "36px", fontWeight: 700, color: "#00bcd4" }}>
+                  {streak.currentStreak}
+                </span>
+                <span style={{ fontSize: "12px", color: "#888", marginTop: "4px" }}>
+                  day streak
+                </span>
+                <span style={{ fontSize: "20px", marginTop: "4px" }}>
+                  {streak.currentStreak >= 7 ? "🔥" : streak.currentStreak >= 3 ? "⚡" : "📅"}
+                </span>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                <p style={{ margin: 0, fontSize: "14px", color: "#aaa" }}>
+                  Sessions attended:{" "}
+                  <span style={{ color: "white", fontWeight: 600 }}>
+                    {streak.totalSessionsAttended}
+                  </span>
+                </p>
+                <p style={{ margin: 0, fontSize: "13px", color: "#666" }}>
+                  {streak.currentStreak === 0
+                    ? "Attend a past session to start your streak!"
+                    : "Keep it up! Don't miss the next session."}
+                </p>
+                {streak.attendanceDates?.length > 0 && (
+                  <p style={{ margin: 0, fontSize: "12px", color: "#555" }}>
+                    Last attended: {streak.attendanceDates[streak.attendanceDates.length - 1]}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="account-section">
           <div className="account-section-header">
