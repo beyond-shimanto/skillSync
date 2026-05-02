@@ -19,6 +19,7 @@ import { accountRouter } from './account/accountRouter.js';
 import { directMessageRouter } from './directMessageRouter.js';
 import { skillRouter } from './routes/skillRoutes.js';
 import { bookmarkRouter } from './routes/bookmarkRoutes.js';
+import { streakRouter } from './routes/streakRoutes.js';
 
 const app = express()
 
@@ -52,6 +53,7 @@ app.use('/account', accountRouter)
 app.use('/direct-messages', directMessageRouter)
 app.use('/api/skills', skillRouter)
 app.use('/api/bookmarks', bookmarkRouter);
+app.use('/api/streak', streakRouter);
 
 const port = 5000;
 server.listen(port)

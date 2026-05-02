@@ -401,4 +401,31 @@ bookmarkSchema.index({ userId: 1, type: 1 })
 
 const bookmarkModel = mongoose.model('Bookmark', bookmarkSchema)
 
-export { Skill, bookmarkModel }
+const sessionAttendanceSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  sessionId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'StudySession',
+    required: true
+  },
+  studyGroupId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'StudyGroup',
+    required: true
+  },
+  attendedAt: {
+    type: Date,
+    default: Date.now
+  }
+}, { timestamps: true })
+
+// One attendance record per user per session
+sessionAttendanceSchema.index({ userId: 1, sessionId: 1 }, { unique: true })
+
+const sessionAttendanceModel = mongoose.model('SessionAttendance', sessionAttendanceSchema)
+
+export { Skill, bookmarkModel, sessionAttendanceModel }
