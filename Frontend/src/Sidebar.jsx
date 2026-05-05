@@ -8,6 +8,7 @@ import {
 import { useContext } from 'react'
 import { authContext } from './AuthContext'
 import { apiContext } from './ApiContext'
+import { useNavigate } from 'react-router-dom'
 
 
 const navSections = [
@@ -44,6 +45,7 @@ const bottomItems = [
 ]
 
 export default function Sidebar() {
+    const navigate = useNavigate()
   const [collapsed, setCollapsed] = useState(true)
 
   const [userType, setUserType] = useState('')
@@ -78,7 +80,7 @@ export default function Sidebar() {
       style={{ width: collapsed ? 52 : 220 }}
     >
       <div className="sidebar-header">
-        {!collapsed && <span className="sidebar-logo">SkillSync</span>}
+        {!collapsed && <span className="sidebar-logo" onClick={() => {navigate('/')}}>SkillSync</span>}
         <button
           className="sidebar-toggle"
           onClick={() => setCollapsed(c => !c)}
