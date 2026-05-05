@@ -31,35 +31,45 @@ import { DirectMessageView } from './DirectMessageComponents/DirectMessageView';
 import { InboxView } from './DirectMessageComponents/InboxView';
 import { BookmarksPage } from './BookmarkComponents/BookmarksPage';
 
+import Layout from './Layout';
+
 
 function App() {
-  
 
   return (
     <>
       <Routes>
-        <Route path="/" element = {<Home></Home>} />
-        <Route path="/login" element = {<Login></Login>} />
-        <Route path="/signup" element = {<SignUp></SignUp>} />
-        <Route path="/study-groups" element = {<ProtectedRoute><StudyGroups/></ProtectedRoute>} />
-        <Route path="/study-groups/create-study-group" element = {<ProtectedRoute><CreateStudyGroup/></ProtectedRoute>} />
-        <Route path="/study-groups/view-group/:groupId" element={<ProtectedRoute><GroupView></GroupView></ProtectedRoute>}></Route>
-        <Route path='/study-groups/view-thread/:groupId/:threadId' element={<ProtectedRoute><ThreadView></ThreadView></ProtectedRoute>}></Route>
-        <Route path='/study-groups/view-chat/:groupId' element={<ProtectedRoute><ChatView></ChatView></ProtectedRoute>}></Route>
-        <Route path="/portfolios" element={<ProtectedRoute><PortfolioList /></ProtectedRoute>} />
-        <Route path="/portfolios/upload" element={<ProtectedRoute><UploadPortfolio /></ProtectedRoute>} />
-        <Route path="/portfolios/my" element={<ProtectedRoute><MyPortfolios /></ProtectedRoute>} />
-        <Route path="/jobs" element={<ProtectedRoute><JobTracker /></ProtectedRoute>} />
-        <Route path="/chatbot" element={<ProtectedRoute><AIChatbot></AIChatbot></ProtectedRoute>} />
-        <Route path="/mentors" element={<ProtectedRoute><MentorDirectory /></ProtectedRoute>} />
-        <Route path="/mentors/sessions" element={<ProtectedRoute><MyMentorSessions /></ProtectedRoute>} />
-        <Route path="/mentors/:mentorUserId" element={<ProtectedRoute><MentorProfileView /></ProtectedRoute>} />
-        <Route path="/mentors/profile/edit" element={<ProtectedRoute><MentorProfileEditor /></ProtectedRoute>} />
-        <Route path="/account" element={<ProtectedRoute><AccountPage /></ProtectedRoute>} />
-        <Route path="/direct-messages/:conversationId" element={<ProtectedRoute><DirectMessageView /></ProtectedRoute>} />
-        <Route path="/inbox" element={<ProtectedRoute><InboxView /></ProtectedRoute>} />
-        <Route path="/roadmap" element={<ProtectedRoute><RoadmapGenerator /></ProtectedRoute>} />
-        <Route path="/bookmarks" element={<ProtectedRoute><BookmarksPage /></ProtectedRoute>} />
+        <Route element={<Layout />}>
+          <Route path="/" element={<Home />} />
+        </Route>
+        
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<SignUp />} />
+
+        
+
+        <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+          <Route path="/study-groups" element={<StudyGroups />} />
+          <Route path="/study-groups/create-study-group" element={<CreateStudyGroup />} />
+          <Route path="/study-groups/view-group/:groupId" element={<GroupView />} />
+          <Route path="/study-groups/view-thread/:groupId/:threadId" element={<ThreadView />} />
+          <Route path="/study-groups/view-chat/:groupId" element={<ChatView />} />
+          <Route path="/portfolios" element={<PortfolioList />} />
+          <Route path="/portfolios/upload" element={<UploadPortfolio />} />
+          <Route path="/portfolios/my" element={<MyPortfolios />} />
+          <Route path="/jobs" element={<JobTracker />} />
+          <Route path="/chatbot" element={<AIChatbot />} />
+          <Route path="/mentors" element={<MentorDirectory />} />
+          <Route path="/mentors/sessions" element={<MyMentorSessions />} />
+          <Route path="/mentors/:mentorUserId" element={<MentorProfileView />} />
+          <Route path="/mentors/profile/edit" element={<MentorProfileEditor />} />
+          <Route path="/account" element={<AccountPage />} />
+          <Route path="/direct-messages/:conversationId" element={<DirectMessageView />} />
+          <Route path="/inbox" element={<InboxView />} />
+          <Route path="/roadmap" element={<RoadmapGenerator />} />
+          <Route path="/bookmarks" element={<BookmarksPage />} />
+        </Route>
       </Routes>
     </>
   )
