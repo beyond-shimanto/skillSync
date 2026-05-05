@@ -15,6 +15,43 @@ function normalizeTags(tags) {
     .filter((tag) => tag.length > 0);
 }
 
+function createAttendanceItems(count) {
+  return Array.from({ length: Math.max(1, count) }, (_, index) => ({
+    sessionNumber: index + 1,
+    status: "pending",
+    notes: ""
+  }));
+}
+
+function getAttendanceItems(session) {
+  if (Array.isArray(session.attendanceItems) && session.attendanceItems.length > 0) {
+    return session.attendanceItems.map((item) => ({
+      sessionNumber: item.sessionNumber,
+      status: item.status || "pending",
+      notes: item.notes || "",
+      attendanceMarkedAt: item.attendanceMarkedAt
+    }));
+  }
+
+  return [
+    {
+      sessionNumber: 1,
+      status: session.attendanceStatus || "pending",
+      notes: session.notes || "",
+      attendanceMarkedAt: session.attendanceMarkedAt
+    }
+  ];
+}
+
+function getAttendanceSummary(attendanceItems) {
+  const items = attendanceItems.length > 0 ? attendanceItems : createAttendanceItems(1);
+
+  if (items.every((item) => item.status === "attended")) return "attended";
+  if (items.every((item) => item.status === "pending")) return "pending";
+  if (items.some((item) => item.status === "pending")) return "pending";
+  return "no-show";
+}
+
 function serializeSession(session) {
   return {
     _id: session._id,
@@ -28,6 +65,7 @@ function serializeSession(session) {
     packageTitleSnapshot: session.packageTitleSnapshot,
     packageDescriptionSnapshot: session.packageDescriptionSnapshot,
     packageDurationMinutesSnapshot: session.packageDurationMinutesSnapshot,
+    packageSessionCountSnapshot: session.packageSessionCountSnapshot || 1,
     packagePriceCentsSnapshot: session.packagePriceCentsSnapshot,
     currencySnapshot: session.currencySnapshot,
     hourlyRateSnapshot: session.hourlyRateSnapshot,
@@ -40,6 +78,7 @@ function serializeSession(session) {
     attendanceStatus: session.attendanceStatus,
     notes: session.notes,
     attendanceMarkedAt: session.attendanceMarkedAt,
+    attendanceItems: getAttendanceItems(session),
     reviewRating: session.reviewRating,
     reviewText: session.reviewText,
     reviewSubmittedAt: session.reviewSubmittedAt
@@ -53,6 +92,7 @@ function serializePackage(pkg) {
     title: pkg.title,
     description: pkg.description,
     durationMinutes: pkg.durationMinutes,
+    sessionCount: pkg.sessionCount || 1,
     priceCents: pkg.priceCents,
     currency: pkg.currency,
     isActive: pkg.isActive,
@@ -203,6 +243,7 @@ export async function createMentorPackage(req, res) {
   const title = String(req.body.title || "").trim();
   const description = String(req.body.description || "").trim();
   const durationMinutes = Number(req.body.durationMinutes);
+  const sessionCount = Number(req.body.sessionCount ?? 1);
   const priceCents = Math.round(Number(req.body.price || 0) * 100);
   const currency = normalizeCurrency(req.body.currency);
 
@@ -214,8 +255,12 @@ export async function createMentorPackage(req, res) {
     return res.status(400).json({ error: "Package duration must be at least 1 minute." });
   }
 
+  if (!Number.isInteger(sessionCount) || sessionCount < 1) {
+    return res.status(400).json({ error: "Package session count must be at least 1." });
+  }
+
   if (!Number.isFinite(priceCents) || priceCents < 50) {
-    return res.status(400).json({ error: "Package price must be at least 0.50." });
+    return res.status(400).json({ error: "Package price per session must be at least 0.50." });
   }
 
   const pkg = await mentorPackageModel.create({
@@ -223,6 +268,7 @@ export async function createMentorPackage(req, res) {
     title,
     description,
     durationMinutes,
+    sessionCount,
     priceCents,
     currency,
     isActive: true
@@ -247,6 +293,7 @@ export async function updateMentorPackage(req, res) {
   const title = String(req.body.title || "").trim();
   const description = String(req.body.description || "").trim();
   const durationMinutes = Number(req.body.durationMinutes);
+  const sessionCount = Number(req.body.sessionCount ?? 1);
   const priceCents = Math.round(Number(req.body.price || 0) * 100);
   const currency = normalizeCurrency(req.body.currency);
 
@@ -258,13 +305,18 @@ export async function updateMentorPackage(req, res) {
     return res.status(400).json({ error: "Package duration must be at least 1 minute." });
   }
 
+  if (!Number.isInteger(sessionCount) || sessionCount < 1) {
+    return res.status(400).json({ error: "Package session count must be at least 1." });
+  }
+
   if (!Number.isFinite(priceCents) || priceCents < 50) {
-    return res.status(400).json({ error: "Package price must be at least 0.50." });
+    return res.status(400).json({ error: "Package price per session must be at least 0.50." });
   }
 
   pkg.title = title;
   pkg.description = description;
   pkg.durationMinutes = durationMinutes;
+  pkg.sessionCount = sessionCount;
   pkg.priceCents = priceCents;
   pkg.currency = currency;
   pkg.isActive = req.body.isActive !== false;
@@ -366,6 +418,8 @@ export async function bookMentorSession(req, res) {
   }
 
   const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+  const sessionCount = pkg.sessionCount || 1;
+  const totalPriceCents = pkg.priceCents * sessionCount;
 
   const session = await mentorSessionModel.create({
     mentorUserId: mentor._id,
@@ -376,13 +430,15 @@ export async function bookMentorSession(req, res) {
     packageTitleSnapshot: pkg.title,
     packageDescriptionSnapshot: pkg.description,
     packageDurationMinutesSnapshot: pkg.durationMinutes,
-    packagePriceCentsSnapshot: pkg.priceCents,
+    packageSessionCountSnapshot: sessionCount,
+    packagePriceCentsSnapshot: totalPriceCents,
     currencySnapshot: pkg.currency,
-    hourlyRateSnapshot: pkg.priceCents / 100,
-    amountCents: pkg.priceCents,
+    hourlyRateSnapshot: totalPriceCents / 100,
+    amountCents: totalPriceCents,
     currency: pkg.currency,
     bookingStatus: "pending_payment",
-    paymentStatus: "pending"
+    paymentStatus: "pending",
+    attendanceItems: createAttendanceItems(sessionCount)
   });
 
   const checkoutSession = await stripe.checkout.sessions.create({
@@ -401,10 +457,10 @@ export async function bookMentorSession(req, res) {
         quantity: 1,
         price_data: {
           currency: pkg.currency,
-          unit_amount: pkg.priceCents,
+          unit_amount: totalPriceCents,
           product_data: {
             name: pkg.title,
-            description: pkg.description || `${pkg.durationMinutes} minute mentorship session`
+            description: pkg.description || `${sessionCount} session mentorship package`
           }
         }
       }
@@ -436,8 +492,8 @@ export async function updateMentorSessionAttendance(req, res) {
   }
 
   const status = String(req.body.status || "").trim();
-  if (!["attended", "no-show"].includes(status)) {
-    return res.status(400).json({ error: "Attendance status must be attended or no-show." });
+  if (!["pending", "attended", "no-show"].includes(status)) {
+    return res.status(400).json({ error: "Attendance status must be pending, attended, or no-show." });
   }
 
   const session = await mentorSessionModel.findById(sessionId);
@@ -458,10 +514,28 @@ export async function updateMentorSessionAttendance(req, res) {
   }
 
   const notes = String(req.body.notes || "").trim();
+  const sessionNumber = Number(req.body.sessionNumber ?? 1);
+  const attendanceItems = getAttendanceItems(session);
+  const itemIndex = attendanceItems.findIndex((item) => item.sessionNumber === sessionNumber);
 
-  session.attendanceStatus = status;
-  session.notes = notes;
-  session.attendanceMarkedAt = new Date();
+  if (!Number.isInteger(sessionNumber) || itemIndex === -1) {
+    return res.status(400).json({ error: "Invalid package session number." });
+  }
+
+  attendanceItems[itemIndex] = {
+    ...attendanceItems[itemIndex],
+    status,
+    notes,
+    attendanceMarkedAt: new Date()
+  };
+
+  session.attendanceItems = attendanceItems;
+  session.attendanceStatus = getAttendanceSummary(attendanceItems);
+  session.notes = attendanceItems
+    .filter((item) => item.notes)
+    .map((item) => `Session ${item.sessionNumber}: ${item.notes}`)
+    .join("\n");
+  session.attendanceMarkedAt = attendanceItems[itemIndex].attendanceMarkedAt;
 
   await session.save();
   await session.populate("mentorUserId", "username");

@@ -17,6 +17,7 @@ export function MentorDashboard({ username, onLogout }) {
   const [sessions, setSessions] = useState([]);
   const [attendanceForms, setAttendanceForms] = useState({});
   const [attendanceMessage, setAttendanceMessage] = useState("");
+  const [selectedAttendanceSessionId, setSelectedAttendanceSessionId] = useState("");
   const [recentReviews, setRecentReviews] = useState([]);
   const [activeSection, setActiveSection] = useState("dashboard");
   const [mentorProfileData, setMentorProfileData] = useState(null);
@@ -25,6 +26,7 @@ export function MentorDashboard({ username, onLogout }) {
     title: "",
     description: "",
     durationMinutes: 60,
+    sessionCount: 1,
     price: 0,
     currency: "usd"
   });
@@ -61,18 +63,20 @@ export function MentorDashboard({ username, onLogout }) {
         const mentorSessions = Array.isArray(sessionsRes.data) ? sessionsRes.data : [];
         setSessions(mentorSessions);
         setAttendanceForms(
-          mentorSessions.reduce((forms, session) => ({
-            ...forms,
-            [session._id]: {
-              status: session.attendanceStatus === "no-show" ? "no-show" : "attended",
-              notes: session.notes || ""
-            }
-          }), {})
+          mentorSessions.reduce((forms, session) => {
+            getAttendanceItems(session).forEach((item) => {
+              forms[getAttendanceFormKey(session._id, item.sessionNumber)] = {
+                status: item.status || "pending",
+                notes: item.notes || ""
+              };
+            });
+            return forms;
+          }, {})
         );
         nextStats = {
           ...nextStats,
-          totalSessionsCompleted: mentorSessions.filter((session) => session.attendanceStatus === "attended").length,
-          upcomingSessionsCount: mentorSessions.filter((session) => session.attendanceStatus === "pending").length,
+          totalSessionsCompleted: countAttendanceItems(mentorSessions, "attended"),
+          upcomingSessionsCount: countAttendanceItems(mentorSessions, "pending"),
           totalEarnings:
             mentorSessions
               .filter((session) => session.paymentStatus === "paid")
@@ -99,21 +103,23 @@ export function MentorDashboard({ username, onLogout }) {
     loadMentorOverview();
   }, []);
 
-  function updateAttendanceForm(sessionId, key, value) {
+  function updateAttendanceForm(sessionId, sessionNumber, key, value) {
+    const formKey = getAttendanceFormKey(sessionId, sessionNumber);
+
     setAttendanceForms((prev) => ({
       ...prev,
-      [sessionId]: {
-        status: "attended",
+      [formKey]: {
+        status: "pending",
         notes: "",
-        ...(prev[sessionId] || {}),
+        ...(prev[formKey] || {}),
         [key]: value
       }
     }));
   }
 
-  async function handleAttendanceSubmit(sessionId) {
+  async function handleAttendanceSubmit(sessionId, sessionNumber) {
     setAttendanceMessage("");
-    const form = attendanceForms[sessionId] || { status: "attended", notes: "" };
+    const form = attendanceForms[getAttendanceFormKey(sessionId, sessionNumber)] || { status: "attended", notes: "" };
     const session = sessions.find((item) => item._id === sessionId);
 
     if (!canMarkAttendance(session)) {
@@ -123,6 +129,7 @@ export function MentorDashboard({ username, onLogout }) {
 
     try {
       const res = await api.put(`/mentors/sessions/${sessionId}/attendance`, {
+        sessionNumber,
         status: form.status,
         notes: form.notes
       });
@@ -131,8 +138,8 @@ export function MentorDashboard({ username, onLogout }) {
       setSessions(nextSessions);
       setStats((prev) => ({
         ...prev,
-        totalSessionsCompleted: nextSessions.filter((session) => session.attendanceStatus === "attended").length,
-        upcomingSessionsCount: nextSessions.filter((session) => session.attendanceStatus === "pending").length
+        totalSessionsCompleted: countAttendanceItems(nextSessions, "attended"),
+        upcomingSessionsCount: countAttendanceItems(nextSessions, "pending")
       }));
       setAttendanceMessage("Attendance saved.");
     } catch (e) {
@@ -146,6 +153,7 @@ export function MentorDashboard({ username, onLogout }) {
       title: "",
       description: "",
       durationMinutes: 60,
+      sessionCount: 1,
       price: 0,
       currency: "usd"
     });
@@ -157,6 +165,7 @@ export function MentorDashboard({ username, onLogout }) {
       title: pkg.title || "",
       description: pkg.description || "",
       durationMinutes: pkg.durationMinutes || 60,
+      sessionCount: pkg.sessionCount || 1,
       price: Number(pkg.priceCents || 0) / 100,
       currency: pkg.currency || "usd"
     });
@@ -172,6 +181,7 @@ export function MentorDashboard({ username, onLogout }) {
         title: packageForm.title,
         description: packageForm.description,
         durationMinutes: Number(packageForm.durationMinutes),
+        sessionCount: Number(packageForm.sessionCount),
         price: Number(packageForm.price),
         currency: packageForm.currency
       };
@@ -246,15 +256,17 @@ export function MentorDashboard({ username, onLogout }) {
         </div>
 
         {activeSection === "sessions" ? (
-          <MentorSessionsView
+          <MentorSessionsView sessions={sessions} />
+        ) : activeSection === "attendance" ? (
+          <MentorAttendanceTrackerView
             attendanceForms={attendanceForms}
             attendanceMessage={attendanceMessage}
             handleAttendanceSubmit={handleAttendanceSubmit}
+            selectedAttendanceSessionId={selectedAttendanceSessionId}
             sessions={sessions}
+            setSelectedAttendanceSessionId={setSelectedAttendanceSessionId}
             updateAttendanceForm={updateAttendanceForm}
           />
-        ) : activeSection === "attendance" ? (
-          <MentorAttendanceTrackerView sessions={sessions} />
         ) : activeSection === "profile" ? (
           <MentorProfileSummary mentorProfileData={mentorProfileData} stats={stats} username={username} />
         ) : activeSection === "editProfile" ? (
@@ -308,6 +320,47 @@ function canMarkAttendance(session) {
 function getAttendanceUnavailableMessage(session) {
   if (isFutureSession(session)) return "You can't mark attendance in advance.";
   return "Attendance can only be marked for paid booked sessions.";
+}
+
+function getAttendanceItems(session) {
+  if (Array.isArray(session?.attendanceItems) && session.attendanceItems.length > 0) {
+    return session.attendanceItems.map((item) => ({
+      sessionNumber: item.sessionNumber,
+      status: item.status || "pending",
+      notes: item.notes || "",
+      attendanceMarkedAt: item.attendanceMarkedAt
+    }));
+  }
+
+  const count = Math.max(1, Number(session?.packageSessionCountSnapshot || 1));
+  return Array.from({ length: count }, (_, index) => ({
+    sessionNumber: index + 1,
+    status: index === 0 ? session?.attendanceStatus || "pending" : "pending",
+    notes: index === 0 ? session?.notes || "" : "",
+    attendanceMarkedAt: index === 0 ? session?.attendanceMarkedAt : undefined
+  }));
+}
+
+function getAttendanceFormKey(sessionId, sessionNumber) {
+  return `${sessionId}:${sessionNumber}`;
+}
+
+function countAttendanceItems(sessions, status) {
+  return sessions.reduce(
+    (total, session) => total + getAttendanceItems(session).filter((item) => item.status === status).length,
+    0
+  );
+}
+
+function getAttendanceSummaryCounts(attendanceItems) {
+  return attendanceItems.reduce(
+    (summary, item) => ({
+      attended: summary.attended + (item.status === "attended" ? 1 : 0),
+      noShow: summary.noShow + (item.status === "no-show" ? 1 : 0),
+      pending: summary.pending + ((item.status || "pending") === "pending" ? 1 : 0)
+    }),
+    { attended: 0, noShow: 0, pending: 0 }
+  );
 }
 
 function MentorProfileSummary({ mentorProfileData, stats, username }) {
@@ -427,7 +480,17 @@ function MentorPackagesView({
             />
           </label>
           <label style={fieldLabelStyle}>
-            Price
+            Session count
+            <input
+              min="1"
+              placeholder="5"
+              type="number"
+              value={packageForm.sessionCount}
+              onChange={(e) => setPackageForm({ ...packageForm, sessionCount: e.target.value })}
+            />
+          </label>
+          <label style={fieldLabelStyle}>
+            Price per Session
             <input
               min="0"
               step="0.01"
@@ -466,8 +529,13 @@ function MentorPackagesView({
                 <p className="mentor-row-title">{pkg.title}</p>
                 <p>{pkg.description || "No description."}</p>
                 <p>{pkg.durationMinutes} min</p>
+                <p>Sessions: {pkg.sessionCount || 1}</p>
                 <p>
-                  {(pkg.priceCents / 100).toFixed(2)} {String(pkg.currency || "usd").toUpperCase()}
+                  Price per session: {(pkg.priceCents / 100).toFixed(2)} {String(pkg.currency || "usd").toUpperCase()}
+                </p>
+                <p>
+                  Total: {(((pkg.priceCents || 0) * (pkg.sessionCount || 1)) / 100).toFixed(2)}{" "}
+                  {String(pkg.currency || "usd").toUpperCase()}
                 </p>
                 <p>Status: {pkg.isActive ? "Active" : "Deleted"}</p>
               </div>
@@ -586,27 +654,21 @@ function MentorReviewsView({ recentReviews, stats }) {
   );
 }
 
-function MentorSessionsView({
-  attendanceForms,
-  attendanceMessage,
-  handleAttendanceSubmit,
-  sessions,
-  updateAttendanceForm
-}) {
+function MentorSessionsView({ sessions }) {
   return (
     <section className="mentor-panels">
       <div className="mentor-panel">
         <h3>Booked Sessions</h3>
-        {attendanceMessage ? <p className="mentor-empty-text">{attendanceMessage}</p> : null}
         {sessions.length === 0 ? (
           <p className="mentor-empty-text">No booked mentor sessions yet.</p>
         ) : (
           sessions.map((session) => {
-            const attendanceDisabled = !canMarkAttendance(session);
+            const attendanceItems = getAttendanceItems(session);
+            const summary = getAttendanceSummaryCounts(attendanceItems);
 
             return (
               <div key={session._id} className="mentor-row-card" style={{ alignItems: "stretch" }}>
-                <div style={{ flex: 1 }}>
+                <div>
                   <p className="mentor-row-title">{session.studentName || "Student"}</p>
                   <p>{session.packageTitleSnapshot || session.topic || "Mentor session"}</p>
                   {session.packageDescriptionSnapshot ? <p>{session.packageDescriptionSnapshot}</p> : null}
@@ -618,35 +680,10 @@ function MentorSessionsView({
                     Paid: {((session.packagePriceCentsSnapshot || session.amountCents || 0) / 100).toFixed(2)}{" "}
                     {String(session.currencySnapshot || session.currency || "usd").toUpperCase()}
                   </p>
-                  <p>Status: {session.attendanceStatus || "pending"}</p>
-                  {session.notes ? <p>Notes: {session.notes}</p> : null}
-                </div>
-                <div style={{ display: "grid", gap: "8px", minWidth: "180px" }}>
-                  {attendanceDisabled ? (
-                    <p className="mentor-empty-text">{getAttendanceUnavailableMessage(session)}</p>
-                  ) : null}
-                  <select
-                    disabled={attendanceDisabled}
-                    value={attendanceForms[session._id]?.status || "attended"}
-                    onChange={(e) => updateAttendanceForm(session._id, "status", e.target.value)}
-                  >
-                    <option value="attended">Attended</option>
-                    <option value="no-show">No-show</option>
-                  </select>
-                  <textarea
-                    disabled={attendanceDisabled}
-                    rows={3}
-                    placeholder="Notes"
-                    value={attendanceForms[session._id]?.notes || ""}
-                    onChange={(e) => updateAttendanceForm(session._id, "notes", e.target.value)}
-                  />
-                  <button
-                    className="mentor-action-btn"
-                    disabled={attendanceDisabled}
-                    onClick={() => handleAttendanceSubmit(session._id)}
-                  >
-                    Mark Attendance
-                  </button>
+                  <p>Package sessions: {attendanceItems.length}</p>
+                  <p>
+                    Attendance: {summary.attended} attended / {summary.noShow} no-show / {summary.pending} pending
+                  </p>
                 </div>
               </div>
             );
@@ -657,45 +694,130 @@ function MentorSessionsView({
   );
 }
 
-function MentorAttendanceTrackerView({ sessions }) {
-  const groups = [
-    { title: "Pending", status: "pending" },
-    { title: "Attended", status: "attended" },
-    { title: "No-show", status: "no-show" }
-  ].map((group) => ({
-    ...group,
-    records: sessions.filter((session) => (session.attendanceStatus || "pending") === group.status)
-  }));
+function MentorAttendanceTrackerView({
+  attendanceForms,
+  attendanceMessage,
+  handleAttendanceSubmit,
+  selectedAttendanceSessionId,
+  sessions,
+  setSelectedAttendanceSessionId,
+  updateAttendanceForm
+}) {
+  const selectedSession =
+    sessions.find((session) => session._id === selectedAttendanceSessionId) || sessions[0] || null;
 
   return (
     <section className="mentor-panels">
-      {groups.map((group) => (
-        <div key={group.status} className="mentor-panel">
-          <h3>{group.title}</h3>
-          {group.records.length === 0 ? (
-            <p className="mentor-empty-text">No {group.title.toLowerCase()} attendance records.</p>
-          ) : (
-            group.records.map((session) => {
-              const attendanceStatus = session.attendanceStatus || "pending";
-              const statusLabel = attendanceStatus === "no-show" ? "No-show" : attendanceStatus;
+      <div className="mentor-panel">
+        <h3>Booked Packages</h3>
+        {sessions.length === 0 ? (
+          <p className="mentor-empty-text">No booked mentor sessions yet.</p>
+        ) : (
+          sessions.map((session) => {
+            const attendanceItems = getAttendanceItems(session);
+            const summary = getAttendanceSummaryCounts(attendanceItems);
+            const isSelected = selectedSession?._id === session._id;
 
-              return (
-                <div key={session._id} className="mentor-row-card" style={{ alignItems: "stretch" }}>
-                  <div>
-                    <p className="mentor-row-title">{session.studentName || "Student"}</p>
-                    <p>{session.packageTitleSnapshot || session.topic || "Mentor session"}</p>
-                    <p>{session.scheduledAt ? new Date(session.scheduledAt).toLocaleString() : "No scheduled time"}</p>
-                    <p>Attendance: {statusLabel}</p>
-                    <p>Notes: {session.notes || "No notes."}</p>
-                    {session.paymentStatus ? <p>Payment: {session.paymentStatus}</p> : null}
-                  </div>
+            return (
+              <button
+                key={session._id}
+                className="mentor-row-card"
+                onClick={() => setSelectedAttendanceSessionId(session._id)}
+                style={{
+                  alignItems: "stretch",
+                  color: "inherit",
+                  cursor: "pointer",
+                  textAlign: "left",
+                  width: "100%",
+                  ...(isSelected ? { borderColor: "#8ab4ff", background: "#263248" } : {})
+                }}
+                type="button"
+              >
+                <div>
+                  <p className="mentor-row-title">{session.studentName || "Student"}</p>
+                  <p>{session.packageTitleSnapshot || session.topic || "Mentor session"}</p>
+                  <p>{session.scheduledAt ? new Date(session.scheduledAt).toLocaleString() : "No scheduled time"}</p>
+                  <p>Payment: {session.paymentStatus || "pending"}</p>
+                  <p>
+                    {summary.attended} attended / {summary.noShow} no-show / {summary.pending} pending
+                  </p>
                 </div>
-              );
-            })
-          )}
-        </div>
-      ))}
+              </button>
+            );
+          })
+        )}
+      </div>
+
+      <div className="mentor-panel">
+        <h3>Attendance Details</h3>
+        {attendanceMessage ? <p className="mentor-empty-text">{attendanceMessage}</p> : null}
+        {!selectedSession ? (
+          <p className="mentor-empty-text">Select a booked package to manage attendance.</p>
+        ) : (
+          <AttendanceDetailPanel
+            attendanceForms={attendanceForms}
+            handleAttendanceSubmit={handleAttendanceSubmit}
+            session={selectedSession}
+            updateAttendanceForm={updateAttendanceForm}
+          />
+        )}
+      </div>
     </section>
+  );
+}
+
+function AttendanceDetailPanel({ attendanceForms, handleAttendanceSubmit, session, updateAttendanceForm }) {
+  const attendanceDisabled = !canMarkAttendance(session);
+  const attendanceItems = getAttendanceItems(session);
+
+  return (
+    <div style={{ display: "grid", gap: "10px" }}>
+      <div>
+        <p className="mentor-row-title">{session.studentName || "Student"}</p>
+        <p>{session.packageTitleSnapshot || session.topic || "Mentor session"}</p>
+        <p>{attendanceItems.length} package sessions</p>
+        {attendanceDisabled ? <p className="mentor-empty-text">{getAttendanceUnavailableMessage(session)}</p> : null}
+      </div>
+
+      {attendanceItems.map((item) => {
+        const formKey = getAttendanceFormKey(session._id, item.sessionNumber);
+
+        return (
+          <div key={formKey} className="mentor-row-card" style={{ alignItems: "stretch" }}>
+            <div style={{ flex: 1 }}>
+              <p className="mentor-row-title">Session {item.sessionNumber}</p>
+              <p>Status: {item.status || "pending"}</p>
+              {item.notes ? <p>Notes: {item.notes}</p> : null}
+            </div>
+            <div style={{ display: "grid", gap: "8px", minWidth: "180px" }}>
+              <select
+                disabled={attendanceDisabled}
+                value={attendanceForms[formKey]?.status || item.status || "pending"}
+                onChange={(e) => updateAttendanceForm(session._id, item.sessionNumber, "status", e.target.value)}
+              >
+                <option value="pending">Pending</option>
+                <option value="attended">Attended</option>
+                <option value="no-show">No-show</option>
+              </select>
+              <textarea
+                disabled={attendanceDisabled}
+                rows={3}
+                placeholder="Notes"
+                value={attendanceForms[formKey]?.notes || ""}
+                onChange={(e) => updateAttendanceForm(session._id, item.sessionNumber, "notes", e.target.value)}
+              />
+              <button
+                className="mentor-action-btn"
+                disabled={attendanceDisabled}
+                onClick={() => handleAttendanceSubmit(session._id, item.sessionNumber)}
+              >
+                Save Session {item.sessionNumber}
+              </button>
+            </div>
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
