@@ -169,8 +169,13 @@ export function MentorProfileView() {
               <strong>{pkg.title}</strong>
               <span>{pkg.description || "Mentorship session"}</span>
               <span>{pkg.durationMinutes} min</span>
+              <span>{pkg.sessionCount || 1} sessions</span>
               <span>
-                {(pkg.priceCents / 100).toFixed(2)} {String(pkg.currency || "usd").toUpperCase()}
+                Price per session: {(pkg.priceCents / 100).toFixed(2)} {String(pkg.currency || "usd").toUpperCase()}
+              </span>
+              <span>
+                Total: {(((pkg.priceCents || 0) * (pkg.sessionCount || 1)) / 100).toFixed(2)}{" "}
+                {String(pkg.currency || "usd").toUpperCase()}
               </span>
             </label>
           ))}
