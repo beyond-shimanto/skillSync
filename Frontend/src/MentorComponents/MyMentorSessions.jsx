@@ -1,6 +1,14 @@
 import { useContext, useEffect, useState } from "react";
 import { apiContext } from "../ApiContext";
 
+function hasAttendedIncludedSession(session) {
+  if (Array.isArray(session.attendanceItems) && session.attendanceItems.length > 0) {
+    return session.attendanceItems.some((item) => item.status === "attended");
+  }
+
+  return session.attendanceStatus === "attended";
+}
+
 export function MyMentorSessions() {
   const { api } = useContext(apiContext);
   const [sessions, setSessions] = useState([]);
@@ -73,7 +81,7 @@ export function MyMentorSessions() {
           const canReview =
             session.bookingStatus === "booked" &&
             session.paymentStatus === "paid" &&
-            session.attendanceStatus === "attended" &&
+            hasAttendedIncludedSession(session) &&
             !session.reviewSubmittedAt;
           const form = reviewForms[session._id] || { rating: 5, text: "" };
 

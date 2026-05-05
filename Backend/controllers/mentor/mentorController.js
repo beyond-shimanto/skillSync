@@ -52,6 +52,10 @@ function getAttendanceSummary(attendanceItems) {
   return "no-show";
 }
 
+function hasAttendedIncludedSession(session) {
+  return getAttendanceItems(session).some((item) => item.status === "attended");
+}
+
 function serializeSession(session) {
   return {
     _id: session._id,
@@ -566,7 +570,7 @@ export async function submitMentorSessionReview(req, res) {
     return res.status(403).json({ error: "Only the student who booked this session can review it." });
   }
 
-  if (session.bookingStatus !== "booked" || session.paymentStatus !== "paid" || session.attendanceStatus !== "attended") {
+  if (session.bookingStatus !== "booked" || session.paymentStatus !== "paid" || !hasAttendedIncludedSession(session)) {
     return res.status(400).json({ error: "Only paid attended sessions can be reviewed." });
   }
 
