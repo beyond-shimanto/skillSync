@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useContext } from "react";
-import axios from "axios";
+import ReactMarkdown from "react-markdown";
 import { apiContext } from "../ApiContext";
 import aiLogo from "./ai_logo-removebg-preview.png";
 import "./AIChatbot.css";
@@ -10,9 +10,9 @@ export function AIChatbot() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [open, setOpen] = useState(false);
+
   const messagesEndRef = useRef(null);
-  const { accessToken } = useContext(apiContext);
-  const { api } = useContext(apiContext);
+  const { accessToken, api } = useContext(apiContext); // ✅ cleaned
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -25,11 +25,8 @@ export function AIChatbot() {
   const sendMessage = async (e) => {
     e.preventDefault();
 
-    if (!inputValue.trim()) {
-      return;
-    }
+    if (!inputValue.trim()) return;
 
-    // Add user message to chat
     const userMessage = {
       role: "user",
       content: inputValue,
@@ -42,10 +39,9 @@ export function AIChatbot() {
     setError("");
 
     try {
-      // Prepare messages in the format the backend expects
       const messagesForAI = updatedMessages.map((msg) => ({
         role: msg.role,
-        content: msg.content,
+        content: String(msg.content || ""),
       }));
 
       const response = await api.post(
@@ -59,12 +55,15 @@ export function AIChatbot() {
         }
       );
 
+      console.log("AI response:", response.data);
+
       if (response.data.success) {
         const aiMessage = {
           role: "assistant",
-          content: response.data.message,
+          content: String(response.data.message || ""), // ✅ safe string
         };
-        setMessages((prevMessages) => [...prevMessages, aiMessage]);
+
+        setMessages((prev) => [...prev, aiMessage]);
       } else {
         setError(response.data.error || "Failed to get response from AI");
       }
@@ -89,7 +88,11 @@ export function AIChatbot() {
   return (
     <>
       {!open && (
-        <button className="ai-chat-launcher" onClick={() => setOpen(true)} aria-label="Open AI chat">
+        <button
+          className="ai-chat-launcher"
+          onClick={() => setOpen(true)}
+          aria-label="Open AI chat"
+        >
           <img src={aiLogo} alt="AI logo" className="ai-chat-launcher-logo" />
         </button>
       )}
@@ -97,6 +100,7 @@ export function AIChatbot() {
       {open && (
         <div className="ai-chat-floating-window">
           <div className="ai-chatbot-container">
+            {/* Header */}
             <div className="ai-chatbot-header">
               <div className="ai-chatbot-logo-title">
                 <img src={aiLogo} alt="AI logo" className="ai-chatbot-logo" />
@@ -105,6 +109,7 @@ export function AIChatbot() {
                   <p className="ai-chatbot-tag">Tap to chat anytime</p>
                 </div>
               </div>
+
               <div className="ai-chatbot-header-actions">
                 {messages.length > 0 && (
                   <button onClick={clearChat} className="clear-btn">
@@ -114,72 +119,90 @@ export function AIChatbot() {
                 <button
                   onClick={() => setOpen(false)}
                   className="ai-chat-close-btn"
-                  aria-label="Close chat"
                 >
                   ✕
                 </button>
               </div>
             </div>
 
-      <div className="ai-chatbot-messages">
-        {messages.length === 0 && (
-          <div className="ai-chatbot-welcome">
-            <p>Welcome! Start chatting with the AI assistant.</p>
-            <p className="ai-chatbot-subtitle">
-              Ask me anything and I'll do my best to help!
-            </p>
-          </div>
-        )}
+            {/* Messages */}
+            <div className="ai-chatbot-messages">
+              {messages.length === 0 && (
+                <div className="ai-chatbot-welcome">
+                  <p>Welcome! Start chatting with the AI assistant.</p>
+                  <p className="ai-chatbot-subtitle">
+                    Ask me anything and I'll help!
+                  </p>
+                </div>
+              )}
 
-        {messages.map((message, index) => (
-          <div
-            key={index}
-            className={`ai-message ${
-              message.role === "user" ? "user-message" : "ai-message-content"
-            }`}
-          >
-            <div className="message-bubble">
-              <p>{message.content}</p>
+              {messages.map((message, index) => (
+                <div
+                  key={index}
+                  className={`ai-message ${
+                    message.role === "user"
+                      ? "user-message"
+                      : "ai-message-content"
+                  }`}
+                >
+                  <div className="message-bubble">
+                    {message.role === "user" ? (
+                      <p>{String(message.content)}</p>
+                    ) : (
+                      <div className="markdown-content">
+                        {message.content ? (
+                          <ReactMarkdown>
+                            {String(message.content)}
+                          </ReactMarkdown>
+                        ) : (
+                          <p>...</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+
+              {/* Loading */}
+              {loading && (
+                <div className="ai-message ai-message-content">
+                  <div className="message-bubble">
+                    <div className="typing-indicator">
+                      <span></span>
+                      <span></span>
+                      <span></span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Error */}
+              {error && (
+                <div className="ai-error-message">
+                  <p>Error: {error}</p>
+                </div>
+              )}
+
+              <div ref={messagesEndRef} />
             </div>
+
+            {/* Input */}
+            <form onSubmit={sendMessage} className="ai-chatbot-form">
+              <input
+                type="text"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                placeholder="Type your message..."
+                disabled={loading}
+                className="ai-chatbot-input"
+              />
+
+              <button type="submit" disabled={loading} className="ai-send-btn">
+                {loading ? "Sending..." : "Send"}
+              </button>
+            </form>
           </div>
-        ))}
-
-        {loading && (
-          <div className="ai-message ai-message-content">
-            <div className="message-bubble">
-              <div className="typing-indicator">
-                <span></span>
-                <span></span>
-                <span></span>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {error && (
-          <div className="ai-error-message">
-            <p>Error: {error}</p>
-          </div>
-        )}
-
-        <div ref={messagesEndRef} />
-      </div>
-
-      <form onSubmit={sendMessage} className="ai-chatbot-form">
-        <input
-          type="text"
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          placeholder="Type your message..."
-          disabled={loading}
-          className="ai-chatbot-input"
-        />
-        <button type="submit" disabled={loading} className="ai-send-btn">
-          {loading ? "Sending..." : "Send"}
-        </button>
-      </form>
-    </div>
-  </div>
+        </div>
       )}
     </>
   );
