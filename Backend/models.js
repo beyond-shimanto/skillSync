@@ -264,6 +264,150 @@ mentorProfileSchema.index({ hourlyRate: 1 })
 
 export const mentorProfileModel = mongoose.model('MentorProfile', mentorProfileSchema)
 
+const mentorPackageSchema = new mongoose.Schema({
+    mentorUserId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
+    title: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    description: {
+        type: String,
+        default: ''
+    },
+    durationMinutes: {
+        type: Number,
+        required: true,
+        min: 1
+    },
+    priceCents: {
+        type: Number,
+        required: true,
+        min: 0
+    },
+    currency: {
+        type: String,
+        default: 'usd',
+        lowercase: true,
+        trim: true
+    },
+    isActive: {
+        type: Boolean,
+        default: true
+    }
+}, { timestamps: true })
+
+mentorPackageSchema.index({ mentorUserId: 1, isActive: 1 })
+
+export const mentorPackageModel = mongoose.model('MentorPackage', mentorPackageSchema)
+
+const mentorSessionSchema = new mongoose.Schema({
+    mentorUserId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
+    studentUserId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
+    topic: {
+        type: String,
+        default: 'Mentor session'
+    },
+    mentorPackageId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'MentorPackage'
+    },
+    scheduledAt: {
+        type: Date
+    },
+    packageTitleSnapshot: {
+        type: String,
+        default: ''
+    },
+    packageDescriptionSnapshot: {
+        type: String,
+        default: ''
+    },
+    packageDurationMinutesSnapshot: {
+        type: Number,
+        default: 0
+    },
+    packagePriceCentsSnapshot: {
+        type: Number,
+        default: 0
+    },
+    currencySnapshot: {
+        type: String,
+        default: 'usd'
+    },
+    hourlyRateSnapshot: {
+        type: Number,
+        default: 0
+    },
+    amountCents: {
+        type: Number,
+        default: 0
+    },
+    currency: {
+        type: String,
+        default: 'usd'
+    },
+    bookingStatus: {
+        type: String,
+        enum: ['pending_payment', 'booked', 'cancelled'],
+        default: 'booked'
+    },
+    paymentStatus: {
+        type: String,
+        enum: ['pending', 'paid', 'failed'],
+        default: 'pending'
+    },
+    stripeCheckoutSessionId: {
+        type: String,
+        default: ''
+    },
+    stripePaymentIntentId: {
+        type: String,
+        default: ''
+    },
+    attendanceStatus: {
+        type: String,
+        enum: ['pending', 'attended', 'no-show'],
+        default: 'pending'
+    },
+    notes: {
+        type: String,
+        default: ''
+    },
+    attendanceMarkedAt: {
+        type: Date
+    },
+    reviewRating: {
+        type: Number,
+        min: 1,
+        max: 5
+    },
+    reviewText: {
+        type: String,
+        default: ''
+    },
+    reviewSubmittedAt: {
+        type: Date
+    }
+}, { timestamps: true })
+
+mentorSessionSchema.index({ mentorUserId: 1, scheduledAt: -1 })
+mentorSessionSchema.index({ studentUserId: 1, scheduledAt: -1 })
+
+export const mentorSessionModel = mongoose.model('MentorSession', mentorSessionSchema)
+
 const studySessionSchema = new mongoose.Schema({
     parentStudyGroupId: {
         type: mongoose.Schema.Types.ObjectId,

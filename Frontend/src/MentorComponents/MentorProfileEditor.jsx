@@ -2,7 +2,7 @@ import { useContext, useEffect, useState } from "react";
 import { apiContext } from "../ApiContext";
 import { SkillTagInput } from "../components/SkillTagInput";
 
-export function MentorProfileEditor() {
+export function MentorProfileEditor({ onSaved } = {}) {
   const { api } = useContext(apiContext);
   const [form, setForm] = useState({
     bio: "",
@@ -58,7 +58,7 @@ export function MentorProfileEditor() {
         .map((tag) => tag.trim())
         .filter((tag) => tag.length > 0);
 
-      await api.put("/mentors/profile/me", {
+      const res = await api.put("/mentors/profile/me", {
         bio: form.bio,
         expertiseTags,
         yearsOfExperience: Number(form.yearsOfExperience),
@@ -66,7 +66,7 @@ export function MentorProfileEditor() {
       });
 
       await api.put("api/skills/save", { expertise });
-
+      onSaved?.(res.data);
       setStatus("Mentor profile saved.");
     } catch (e2) {
       setStatus(e2.response?.data?.error || "Failed to save mentor profile.");
@@ -79,7 +79,7 @@ export function MentorProfileEditor() {
       {loading ? <p>Loading...</p> : null}
       {status ? <p>{status}</p> : null}
 
-      <form onSubmit={handleSubmit} style={{ display: "grid", gap: "10px", maxWidth: "600px" }}>
+      <form onSubmit={handleSubmit} style={formStyle}>
         <textarea
           rows={5}
           placeholder="Bio"
@@ -93,28 +93,22 @@ export function MentorProfileEditor() {
           onChange={(e) => setForm({ ...form, expertiseTagsText: e.target.value })}
           style={inputStyle}
         />
-        <input
-          type="number"
-          placeholder="Years of experience"
-          value={form.yearsOfExperience}
-          onChange={(e) => setForm({ ...form, yearsOfExperience: e.target.value })}
-          style={inputStyle}
-        />
-        <input
-          type="number"
-          placeholder="Hourly rate"
-          value={form.hourlyRate}
-          onChange={(e) => setForm({ ...form, hourlyRate: e.target.value })}
-          style={inputStyle}
-        />
+        <label style={fieldLabelStyle}>
+          Years of Experience
+          <input
+            type="number"
+            placeholder="Years of Experience"
+            value={form.yearsOfExperience}
+            onChange={(e) => setForm({ ...form, yearsOfExperience: e.target.value })}
+            style={inputStyle}
+          />
+        </label>
 
-        {/* New structured skill tag picker */}
         <SkillTagInput
           selected={expertise}
           onChange={setExpertise}
           placeholder="Expertise skills (select from list)"
         />
-
         <button style={buttonStyle} type="submit">
           Save Profile
         </button>
@@ -122,6 +116,24 @@ export function MentorProfileEditor() {
     </div>
   );
 }
+
+const formStyle = {
+  background: "#1a1f29",
+  border: "1px solid #2c3340",
+  borderRadius: "12px",
+  display: "grid",
+  gap: "12px",
+  maxWidth: "600px",
+  padding: "16px"
+};
+
+const fieldLabelStyle = {
+  color: "#cbd6ea",
+  display: "grid",
+  gap: "6px",
+  fontSize: "0.95rem",
+  fontWeight: 600
+};
 
 const inputStyle = {
   padding: "8px",

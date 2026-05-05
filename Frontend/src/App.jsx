@@ -23,6 +23,7 @@ import { RoadmapGenerator } from './aicomponent/RoadmapGenerator'
 import { MentorDirectory } from './MentorComponents/MentorDirectory'
 import { MentorProfileView } from './MentorComponents/MentorProfileView'
 import { MentorProfileEditor } from './MentorComponents/MentorProfileEditor'
+import { MyMentorSessions } from './MentorComponents/MyMentorSessions'
 
 import JobTracker from "./JobTracker";
 import { AccountPage } from './accountcComponents/AccountPage';
@@ -51,6 +52,7 @@ function App() {
         <Route path="/jobs" element={<ProtectedRoute><JobTracker /></ProtectedRoute>} />
         <Route path="/chatbot" element={<ProtectedRoute><AIChatbot></AIChatbot></ProtectedRoute>} />
         <Route path="/mentors" element={<ProtectedRoute><MentorDirectory /></ProtectedRoute>} />
+        <Route path="/mentors/sessions" element={<ProtectedRoute><MyMentorSessions /></ProtectedRoute>} />
         <Route path="/mentors/:mentorUserId" element={<ProtectedRoute><MentorProfileView /></ProtectedRoute>} />
         <Route path="/mentors/profile/edit" element={<ProtectedRoute><MentorProfileEditor /></ProtectedRoute>} />
         <Route path="/account" element={<ProtectedRoute><AccountPage /></ProtectedRoute>} />

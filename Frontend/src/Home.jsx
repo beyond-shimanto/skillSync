@@ -136,6 +136,7 @@ export function Home(){
                     <Link to='/mentors'>Mentor Directory</Link>
                     <Link to='/roadmap'>Learning Roadmap</Link>
                     <Link to='/bookmarks'>My Bookmarks</Link>
+                    <Link to='/mentors/sessions'>My Mentor Sessions</Link>
                     {userType === 'mentor' && <Link to='/mentors/profile/edit'>Edit Mentor Profile</Link>}
                 </div>
              </div>
