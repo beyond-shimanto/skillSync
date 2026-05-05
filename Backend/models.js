@@ -284,6 +284,11 @@ const mentorPackageSchema = new mongoose.Schema({
         required: true,
         min: 1
     },
+    sessionCount: {
+        type: Number,
+        default: 1,
+        min: 1
+    },
     priceCents: {
         type: Number,
         required: true,
@@ -339,6 +344,11 @@ const mentorSessionSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    packageSessionCountSnapshot: {
+        type: Number,
+        default: 1,
+        min: 1
+    },
     packagePriceCentsSnapshot: {
         type: Number,
         default: 0
@@ -388,6 +398,28 @@ const mentorSessionSchema = new mongoose.Schema({
     },
     attendanceMarkedAt: {
         type: Date
+    },
+    attendanceItems: {
+        type: [{
+            sessionNumber: {
+                type: Number,
+                required: true,
+                min: 1
+            },
+            status: {
+                type: String,
+                enum: ['pending', 'attended', 'no-show'],
+                default: 'pending'
+            },
+            notes: {
+                type: String,
+                default: ''
+            },
+            attendanceMarkedAt: {
+                type: Date
+            }
+        }],
+        default: []
     },
     reviewRating: {
         type: Number,
